@@ -61,25 +61,84 @@
     <!-- ===== HOME PAGE ===== -->
     <main class="page active" id="page-home">
         <!-- Hero Section -->
-        <section class="hero">
-            <div class="hero-bg-shapes">
-                <div class="shape shape-1"></div>
-                <div class="shape shape-2"></div>
-                <div class="shape shape-3"></div>
-                <div class="shape shape-4"></div>
-                <div class="shape shape-5"></div>
+        <section class="hero" id="heroSection">
+            <div class="hero-bg-shapes" id="heroBgShapes">
+                <div class="shape shape-1" id="shape1"></div>
+                <div class="shape shape-2" id="shape2"></div>
+                <div class="shape shape-3" id="shape3"></div>
+                <div class="shape shape-4" id="shape4"></div>
+                <div class="shape shape-5" id="shape5"></div>
+
+                <!-- ☁️ Fluffy Cartoon Clouds with Cute Animated Drifting -->
+                <div class="cartoon-cloud cloud-1" title="Mây trắng bồng bềnh">
+                    <span class="cloud-face">☁️</span>
+                </div>
+                <div class="cartoon-cloud cloud-2" title="Mây nắng sớm">
+                    <span class="cloud-face">⛅</span>
+                </div>
+                <div class="cartoon-cloud cloud-3" title="Mây cầu vồng">
+                    <span class="cloud-face">☁️</span>
+                </div>
+
+                <!-- 🐝 Flying Cartoon Bee with Dashed Flight Path & Trail -->
+                <div class="cartoon-flyer-bee" id="cartoonBee" title="Chú ong chăm chỉ">
+                    <span class="bee-emoji">🐝</span>
+                    <div class="bee-trail">
+                        <span class="trail-sparkle">✨</span>
+                        <span class="trail-dot"></span>
+                        <span class="trail-dot"></span>
+                    </div>
+                </div>
+
+                <!-- ✈️ Gliding Paper Airplane -->
+                <div class="cartoon-paper-plane" id="cartoonPaperPlane" title="Máy bay giấy ước mơ">
+                    <span class="plane-emoji">✈️</span>
+                    <span class="plane-wind">💨</span>
+                </div>
+
+                <!-- 🎈 Balloon Cluster -->
+                <div class="cartoon-balloon-cluster" id="cartoonBalloons" title="Chùm bóng bay sắc màu">
+                    <span class="balloon-item b1">🎈</span>
+                    <span class="balloon-item b2">🎈</span>
+                    <span class="balloon-item b3">🎈</span>
+                </div>
+
+                <!-- 🫧 Floating Translucent Alphabet Bubble Orbs -->
+                <div class="cartoon-alpha-bubble bubble-a" style="--delay: 0s; --dur: 7.5s; --left: 10%;">
+                    <span class="bubble-letter">A</span>
+                </div>
+                <div class="cartoon-alpha-bubble bubble-b" style="--delay: 2.5s; --dur: 8.5s; --left: 26%;">
+                    <span class="bubble-letter">B</span>
+                </div>
+                <div class="cartoon-alpha-bubble bubble-c" style="--delay: 4.2s; --dur: 8s; --left: 72%;">
+                    <span class="bubble-letter">C</span>
+                </div>
+                <div class="cartoon-alpha-bubble bubble-star" style="--delay: 1.6s; --dur: 9.2s; --left: 88%;">
+                    <span class="bubble-letter">⭐</span>
+                </div>
+                <div class="cartoon-alpha-bubble bubble-music" style="--delay: 3.8s; --dur: 7s; --left: 52%;">
+                    <span class="bubble-letter">🎵</span>
+                </div>
+
+                <!-- ✨ Twinkling Stars & Sparkles -->
+                <div class="cartoon-twinkle tw-1" style="top: 14%; left: 8%;">✨</div>
+                <div class="cartoon-twinkle tw-2" style="top: 36%; right: 10%;">⭐</div>
+                <div class="cartoon-twinkle tw-3" style="top: 68%; left: 18%;">🌟</div>
+                <div class="cartoon-twinkle tw-4" style="top: 22%; left: 42%;">💫</div>
+                <div class="cartoon-twinkle tw-5" style="top: 76%; right: 28%;">✨</div>
             </div>
+
             <div class="hero-content">
                 <div class="hero-text">
                     <div class="hero-badge animate-bounce-in">
                         <span>🎉</span> Học mà chơi, chơi mà học!
                     </div>
-                    <h1 class="hero-title">
+                    <h1 class="hero-title" id="heroMainTitle">
                         <span class="title-line">Khám phá</span>
                         <span class="title-line gradient-text">Tiếng Anh</span>
                         <span class="title-line">Cùng FunWords! 🚀</span>
                     </h1>
-                    <p class="hero-desc">
+                    <p class="hero-desc" id="heroMainDesc">
                         Hơn <strong>500+ từ vựng</strong> thú vị đang chờ bạn! Cùng chơi game, 
                         học từ mới và trở thành <span class="highlight-word">Siêu Sao Tiếng Anh</span> nào! ⭐
                     </p>
@@ -108,12 +167,80 @@
                             <span class="hero-stat-label">Bạn nhỏ</span>
                         </div>
                     </div>
+
+                    <!-- Cartoon Characters Squad Showcase (Continuous Animation) -->
+                    <div class="hero-squad-container">
+                        <div class="squad-title-badge">
+                            <span>🐾</span> Biệt Đội Bạn Nhỏ Vui Nhộn ✨
+                        </div>
+                        <div class="squad-row">
+                            <!-- Rexy Dino -->
+                            <div class="squad-card squad-dino" id="squadDino" onclick="interactCartoonCharacter('rexy')" title="🦖 Dino Rexy háu ăn">
+                                <div class="squad-avatar-box">
+                                    <div class="cartoon-char char-dino">
+                                        <span class="char-icon">🦖</span>
+                                        <span class="char-accessory">🍪</span>
+                                        <div class="char-particles" id="particlesDino"></div>
+                                    </div>
+                                </div>
+                                <div class="squad-info">
+                                    <div class="squad-name">Rexy Háu Ăn</div>
+                                    <div class="squad-role">Khủng long cắn chữ</div>
+                                </div>
+                            </div>
+
+                            <!-- Pip Robo -->
+                            <div class="squad-card squad-robo" id="squadRobo" onclick="interactCartoonCharacter('pip')" title="🤖 Robo Pip vũ đạo">
+                                <div class="squad-avatar-box">
+                                    <div class="cartoon-char char-robo">
+                                        <span class="char-icon">🤖</span>
+                                        <span class="char-accessory">⚡</span>
+                                        <div class="char-particles" id="particlesRobo"></div>
+                                    </div>
+                                </div>
+                                <div class="squad-info">
+                                    <div class="squad-name">Pip Vũ Đạo</div>
+                                    <div class="squad-role">Robot 1.000.000V</div>
+                                </div>
+                            </div>
+
+                            <!-- Mimi Cat -->
+                            <div class="squad-card squad-cat" id="squadCat" onclick="interactCartoonCharacter('mimi')" title="🐱 Mèo Mimi quậy">
+                                <div class="squad-avatar-box">
+                                    <div class="cartoon-char char-cat">
+                                        <span class="char-icon">🐱</span>
+                                        <span class="char-accessory">🐟</span>
+                                        <div class="char-particles" id="particlesCat"></div>
+                                    </div>
+                                </div>
+                                <div class="squad-info">
+                                    <div class="squad-name">Mimi Quậy</div>
+                                    <div class="squad-role">Mèo bắt từ vựng</div>
+                                </div>
+                            </div>
+
+                            <!-- Bo Octo -->
+                            <div class="squad-card squad-octo" id="squadOcto" onclick="interactCartoonCharacter('octo')" title="🐙 Bạch Tuộc Bo">
+                                <div class="squad-avatar-box">
+                                    <div class="cartoon-char char-octo">
+                                        <span class="char-icon">🐙</span>
+                                        <span class="char-accessory">🫧</span>
+                                        <div class="char-particles" id="particlesOcto"></div>
+                                    </div>
+                                </div>
+                                <div class="squad-info">
+                                    <div class="squad-name">Bo Phù Thủy</div>
+                                    <div class="squad-role">Bạch tuộc bóng bay</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
                 <div class="hero-mascot">
                     <div class="mascot-container animate-float" id="mascotContainer">
                         <div class="mascot-character" id="mascotCharacter">
                             <div class="mascot-bounce-wrapper" id="mascotBounceWrapper">
-                                <div class="mascot-body" id="mascotBody" title="👆 Nhấp chuột & kéo dãn như kẹo dẻo slime, hoặc chọc ghẹo tui nhé!">
+                                <div class="mascot-body" id="mascotBody" title="👆 Nhấp chuột & kéo dãn như kẹo dẻo slime!">
                                     <div class="mascot-face" id="mascotFace">
                                         <div class="mascot-eyes">
                                             <div class="mascot-eye left" id="eyeLeft">
@@ -135,7 +262,7 @@
                                         <div class="mascot-tear-drop right" id="mascotTearR">💧</div>
                                     </div>
                                     
-                                    <!-- Dynamic props layer (glasses, mustache, pirate patch, clown nose) directly over the 200px body -->
+                                    <!-- Dynamic props layer directly over the 200px body -->
                                     <div class="mascot-props-layer" id="mascotPropsLayer"></div>
                                     
                                     <!-- Dynamic pie splat cream layer directly over the 200px body -->
@@ -156,41 +283,41 @@
                             </div>
                         </div>
 
-                        <!-- Mascot Interactive Prank & Play Toolbar -->
+                        <!-- Mascot Interactive Prank Toolbar (Restored with 6 Fun Actions) -->
                         <div class="mascot-interactive-bar" id="mascotInteractiveBar">
                             <div class="mascot-bar-header">
-                                <span class="mascot-bar-badge">⚡ Góc Phá Phách & Nghịch Ngợm</span>
-                                <span class="mascot-bar-hint">👆 Kéo dãn mặt cười hoặc chọn trò:</span>
+                                <span class="mascot-bar-badge">🤹 Góc Nghịch Ngợm Mascot</span>
+                                <span class="mascot-bar-hint">Bấm nút phá phách hoặc dùng chuột kéo dãn mặt cười nhé!</span>
                             </div>
                             <div class="mascot-tool-grid">
-                                <button type="button" class="mascot-tool-btn" id="btnPrankTickle" onclick="triggerMascotPrank('tickle')" title="Cù lét cười ngặt nghẽo">
-                                    <span class="tool-emoji">🤣</span>
+                                <button type="button" class="mascot-tool-btn" id="btnPrankTickle" onclick="triggerMascotPrank('tickle')" title="Cù lét cười nắc nẻ">
+                                    <span class="tool-emoji">🪶</span>
                                     <span class="tool-text">Chọc Lét</span>
                                 </button>
                                 <button type="button" class="mascot-tool-btn" id="btnPrankSlap" onclick="triggerMascotPrank('slap')" title="Ném bánh kem dính mặt">
                                     <span class="tool-emoji">🥧</span>
                                     <span class="tool-text">Ném Bánh</span>
                                 </button>
-                                <button type="button" class="mascot-tool-btn" id="btnPrankProps" onclick="triggerMascotPrank('props')" title="Đeo râu giả, kính ngố, mũ cướp biển">
+                                <button type="button" class="mascot-tool-btn" id="btnPrankProps" onclick="triggerMascotPrank('props')" title="Đeo kính, râu giả ngộ nghĩnh">
                                     <span class="tool-emoji">🥸</span>
                                     <span class="tool-text">Hóa Trang</span>
                                 </button>
-                                <button type="button" class="mascot-tool-btn" id="btnPrankSpin" onclick="triggerMascotPrank('spin')" title="Quay tít thò lò hoa cả mắt">
-                                    <span class="tool-emoji">🌀</span>
+                                <button type="button" class="mascot-tool-btn" id="btnPrankSpin" onclick="triggerMascotPrank('spin')" title="Quay tít thò lò hoa mắt">
+                                    <span class="tool-emoji">🌪️</span>
                                     <span class="tool-text">Quay Cuồng</span>
                                 </button>
-                                <button type="button" class="mascot-tool-btn" id="btnPrankInflate" onclick="triggerMascotPrank('inflate')" title="Bơm to đùng nổ pháo hoa">
+                                <button type="button" class="mascot-tool-btn" id="btnPrankInflate" onclick="triggerMascotPrank('inflate')" title="Bơm căng to đùng như bóng bay">
                                     <span class="tool-emoji">🎈</span>
                                     <span class="tool-text">Bơm Nổ</span>
                                 </button>
-                                <button type="button" class="mascot-tool-btn btn-tool-clean" id="btnPrankClean" onclick="triggerMascotPrank('clean')" title="Tắm rửa sạch sẽ, hoàn nguyên">
+                                <button type="button" class="mascot-tool-btn btn-tool-clean" id="btnPrankClean" onclick="triggerMascotPrank('clean')" title="Lau sạch bọt kem & phụ kiện">
                                     <span class="tool-emoji">🧼</span>
                                     <span class="tool-text">Tẩy Sạch</span>
                                 </button>
                             </div>
                         </div>
 
-                        <!-- Floating Letters MUST have pointer-events: none; so they never block dragging or clicks! -->
+                        <!-- Floating Letters -->
                         <div class="floating-letters" style="pointer-events: none;">
                             <span class="float-letter" style="--delay: 0s; --x: -80px; --y: -60px; pointer-events: none;">A</span>
                             <span class="float-letter" style="--delay: 0.5s; --x: 80px; --y: -40px; pointer-events: none;">B</span>
@@ -212,6 +339,12 @@
         <section class="section daily-word-section">
             <div class="container">
                 <div class="daily-word-card">
+                    <!-- Ambient Cartoon Cat Mimi peeking over the card -->
+                    <div class="card-ambient-peek cat-peek" onclick="interactCartoonCharacter('mimi')" title="Mèo Mimi đang rình bắt từ vựng! Bấm để vuốt ve nhé!">
+                        <span class="peek-bubble">Meo! 🐟</span>
+                        <span class="peek-avatar">🐱</span>
+                    </div>
+
                     <div class="daily-word-header">
                         <span class="daily-badge">📅 Từ vựng hôm nay</span>
                         <span class="daily-date" id="todayDate"></span>
@@ -234,10 +367,130 @@
             </div>
         </section>
 
+        <!-- ===== Sân Khấu Biến Hình Nhiệm Màu ===== -->
+        <section class="section morph-lab-section" id="morphLabSection">
+            <div class="container">
+                <div class="section-header">
+                    <h2 class="section-title">
+                        <span class="title-emoji">🎪</span>
+                        Sân Khấu Biến Hình Nhiệm Màu
+                    </h2>
+                    <p class="section-subtitle">
+                        Cùng ngắm nhìn bạn Mặt Cười nhảy múa biến hóa muôn hình vạn trạng (Tròn ➔ Vuông ➔ Ngôi Sao ➔ Tam Giác ➔ Giọt Nước) siêu diệu kỳ!
+                    </p>
+                </div>
+
+                <!-- Continuous Morph Theater Showcase -->
+                <div class="morph-theater-wrapper">
+                    <!-- Auto-Progress Timeline Track -->
+                    <div class="morph-timeline-track">
+                        <div class="timeline-step active" id="morphStep-circle">
+                            <span class="step-icon">🟡</span>
+                            <span class="step-name">Tròn Kẹo Dẻo</span>
+                        </div>
+                        <div class="timeline-connector">➔</div>
+                        <div class="timeline-step" id="morphStep-square">
+                            <span class="step-icon">🟦</span>
+                            <span class="step-name">Khối Hộp</span>
+                        </div>
+                        <div class="timeline-connector">➔</div>
+                        <div class="timeline-step" id="morphStep-star">
+                            <span class="step-icon">⭐</span>
+                            <span class="step-name">Ngôi Sao</span>
+                        </div>
+                        <div class="timeline-connector">➔</div>
+                        <div class="timeline-step" id="morphStep-triangle">
+                            <span class="step-icon">🔺</span>
+                            <span class="step-name">Tam Giác</span>
+                        </div>
+                        <div class="timeline-connector">➔</div>
+                        <div class="timeline-step" id="morphStep-drop">
+                            <span class="step-icon">💧</span>
+                            <span class="step-name">Giọt Nước</span>
+                        </div>
+                    </div>
+
+                    <!-- Main Character Showcase Stage -->
+                    <div class="morph-stage-card morph-stage-fullscreen">
+                        <div class="morph-stage-aura"></div>
+                        <div class="morph-stage-halo"></div>
+
+                        <!-- Side Cartoon Companions on Stage -->
+                        <div class="stage-companion left-companion">
+                            <div class="companion-avatar" onclick="interactCartoonCharacter('rexy')" title="Dino Rexy đang ngắm biến hình">
+                                <span>🦖</span>
+                                <small>Rexy 🍪</small>
+                            </div>
+                            <div class="companion-avatar" onclick="interactCartoonCharacter('pip')" title="Robo Pip đang đo đạc hình học">
+                                <span>🤖</span>
+                                <small>Pip ⚡</small>
+                            </div>
+                        </div>
+
+                        <!-- Character Center Container -->
+                        <div class="morph-character-container" id="morphCharContainer" onclick="pokeMorphCharacter()">
+                            <!-- Floating morph badge -->
+                            <div class="morph-shape-badge" id="morphShapeBadge">
+                                <span id="morphBadgeIcon">🟡</span> <span id="morphBadgeText">Tròn Xoay Kẹo Dẻo</span>
+                            </div>
+
+                            <!-- Morphed Body Element -->
+                            <div class="morph-char-body shape-circle" id="morphCharBody">
+                                <!-- Morphed Eyes -->
+                                <div class="morph-char-eyes" id="morphCharEyes">
+                                    <div class="morph-eye left">
+                                        <div class="morph-pupil"></div>
+                                        <div class="morph-eye-shine"></div>
+                                    </div>
+                                    <div class="morph-eye right">
+                                        <div class="morph-pupil"></div>
+                                        <div class="morph-eye-shine"></div>
+                                    </div>
+                                </div>
+
+                                <!-- Morphed Mouth -->
+                                <div class="morph-char-mouth" id="morphCharMouth"></div>
+
+                                <!-- Morphed Cheeks -->
+                                <div class="morph-char-blush left"></div>
+                                <div class="morph-char-blush right"></div>
+
+                                <!-- Dynamic Morphed Prop -->
+                                <div class="morph-char-prop" id="morphCharProp">👑</div>
+                            </div>
+
+                            <!-- Morph Character Speech Bubble -->
+                            <div class="morph-speech-bubble" id="morphSpeechBubble">
+                                <span id="morphSpeechText">Tớ đang biến đổi muôn hình vạn trạng nè! Thấy tớ dẻo dai chưa! ✨</span>
+                            </div>
+                        </div>
+
+                        <!-- Side Cartoon Companions Right -->
+                        <div class="stage-companion right-companion">
+                            <div class="companion-avatar" onclick="interactCartoonCharacter('mimi')" title="Mèo Mimi đang cổ vũ">
+                                <span>🐱</span>
+                                <small>Mimi 🐟</small>
+                            </div>
+                            <div class="companion-avatar" onclick="interactCartoonCharacter('octo')" title="Bạch tuộc Bo đang tạo bong bóng">
+                                <span>🐙</span>
+                                <small>Bo 🫧</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
         <!-- Featured Games Section -->
         <section class="section games-preview-section">
             <div class="container">
-                <div class="section-header">
+                <div class="section-header section-header-with-ambient">
+                    <!-- Dino Gamer Ambient Character -->
+                    <div class="section-ambient-char dino-gamer" onclick="interactCartoonCharacter('rexy')" title="Rexy đang cổ vũ bạn chơi game! Bấm vào tớ nhé!">
+                        <span class="ambient-avatar">🦖</span>
+                        <span class="ambient-tag">Gamer Rexy 🎮</span>
+                    </div>
+
                     <h2 class="section-title">
                         <span class="title-emoji">🎮</span>
                         Trò Chơi Nổi Bật
@@ -346,7 +599,13 @@
         <!-- Categories Section -->
         <section class="section categories-section">
             <div class="container">
-                <div class="section-header">
+                <div class="section-header section-header-with-ambient">
+                    <!-- Robo Jet Ambient Character -->
+                    <div class="section-ambient-char robo-jet" onclick="interactCartoonCharacter('pip')" title="Robo Pip đang bay lượn trên các chủ đề! Bấm vào tớ nhé!">
+                        <span class="ambient-avatar">🤖</span>
+                        <span class="ambient-tag">Robo Fly 🚀</span>
+                    </div>
+
                     <h2 class="section-title">
                         <span class="title-emoji">📚</span>
                         Chủ Đề Từ Vựng

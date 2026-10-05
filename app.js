@@ -624,6 +624,88 @@ class SoundEngine {
             gain.connect(this.ctx.destination);
             osc.start(now);
             osc.stop(now + 0.66);
+        } else if (type === 'morph') {
+            // PowerPoint Morph magical glissando sweep
+            const osc = this.ctx.createOscillator();
+            const gain = this.ctx.createGain();
+            osc.type = 'triangle';
+            osc.frequency.setValueAtTime(320, now);
+            osc.frequency.exponentialRampToValueAtTime(980, now + 0.25);
+            osc.frequency.exponentialRampToValueAtTime(640, now + 0.45);
+            gain.gain.setValueAtTime(0.2, now);
+            gain.gain.exponentialRampToValueAtTime(0.001, now + 0.5);
+            osc.connect(gain);
+            gain.connect(this.ctx.destination);
+            osc.start(now);
+            osc.stop(now + 0.52);
+
+            // Shimmer chime
+            [1200, 1500, 1800].forEach((freq, idx) => {
+                const sOsc = this.ctx.createOscillator();
+                const sGain = this.ctx.createGain();
+                sOsc.type = 'sine';
+                sOsc.frequency.setValueAtTime(freq, now + 0.15 + idx * 0.08);
+                sGain.gain.setValueAtTime(0.12, now + 0.15 + idx * 0.08);
+                sGain.gain.exponentialRampToValueAtTime(0.001, now + 0.15 + idx * 0.08 + 0.2);
+                sOsc.connect(sGain);
+                sGain.connect(this.ctx.destination);
+                sOsc.start(now + 0.15 + idx * 0.08);
+                sOsc.stop(now + 0.15 + idx * 0.08 + 0.22);
+            });
+        } else if (type === 'robot') {
+            // Retro digital 8-bit beeps
+            [680, 880, 1100].forEach((freq, idx) => {
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+                osc.type = 'square';
+                osc.frequency.setValueAtTime(freq, now + idx * 0.06);
+                gain.gain.setValueAtTime(0.08, now + idx * 0.06);
+                gain.gain.exponentialRampToValueAtTime(0.001, now + idx * 0.06 + 0.08);
+                osc.connect(gain);
+                gain.connect(this.ctx.destination);
+                osc.start(now + idx * 0.06);
+                osc.stop(now + idx * 0.06 + 0.09);
+            });
+        } else if (type === 'chomp') {
+            // Crunchy cartoon bite
+            const osc = this.ctx.createOscillator();
+            const gain = this.ctx.createGain();
+            osc.type = 'sawtooth';
+            osc.frequency.setValueAtTime(220, now);
+            osc.frequency.exponentialRampToValueAtTime(90, now + 0.08);
+            gain.gain.setValueAtTime(0.2, now);
+            gain.gain.exponentialRampToValueAtTime(0.001, now + 0.1);
+            osc.connect(gain);
+            gain.connect(this.ctx.destination);
+            osc.start(now);
+            osc.stop(now + 0.11);
+        } else if (type === 'purr') {
+            // Gentle playful kitten chirp
+            const osc = this.ctx.createOscillator();
+            const gain = this.ctx.createGain();
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(520, now);
+            osc.frequency.linearRampToValueAtTime(780, now + 0.1);
+            osc.frequency.linearRampToValueAtTime(620, now + 0.2);
+            gain.gain.setValueAtTime(0.15, now);
+            gain.gain.exponentialRampToValueAtTime(0.001, now + 0.24);
+            osc.connect(gain);
+            gain.connect(this.ctx.destination);
+            osc.start(now);
+            osc.stop(now + 0.25);
+        } else if (type === 'bubble') {
+            // Resonant soap bubble pop
+            const osc = this.ctx.createOscillator();
+            const gain = this.ctx.createGain();
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(400, now);
+            osc.frequency.exponentialRampToValueAtTime(1150, now + 0.12);
+            gain.gain.setValueAtTime(0.18, now);
+            gain.gain.exponentialRampToValueAtTime(0.001, now + 0.13);
+            osc.connect(gain);
+            gain.connect(this.ctx.destination);
+            osc.start(now);
+            osc.stop(now + 0.14);
         }
     }
 
@@ -1719,6 +1801,446 @@ async function loadDataFromAPI() {
     }
 }
 
+// ============================================================
+// CARTOON CHARACTERS SQUAD & AMBIENT CHARACTERS INTERACTION
+// ============================================================
+
+const SQUAD_DATA = {
+    rexy: {
+        name: "Rexy Háu Ăn 🦖",
+        sfx: "chomp",
+        emojis: ['🍪', '🦖', '⭐', '✨', '🐾'],
+        phrases: [
+            "Ngoàm ngoàm! Bánh quy chữ A ngon tuyệt cú mèo! Rexy ăn thêm chữ B đây! 🍪🦖",
+            "Graoo! Rexy là chú khủng long mê học từ vựng nhất quả đất đó! 🦖✨",
+            "Hắt... xì! Rexy vừa hắt xì văng ra 5 ngôi sao lấp lánh rồi nè! 🤧⭐",
+            "Nhai nhồm nhoàm từ vựng tiếng Anh ngon như kẹo dẻo vậy á! 😋🍭"
+        ]
+    },
+    pip: {
+        name: "Robo Pip 🤖",
+        sfx: "robot",
+        emojis: ['⚡', '🤖', '🔩', '✨', '🛸'],
+        phrases: [
+            "Bíp bíp bôop! Bộ nhớ của Pip vừa nạp thêm 100 từ vựng siêu cấp! 🤖⚡",
+            "Cảnh báo: Trí thông minh và độ đáng yêu của bạn vượt ngưỡng 1.000.000%! 🤖💖",
+            "Pip vừa nhảy điệu xoay ốc vít ăn mừng từ mới nè! Bíp boop! 🔩✨",
+            "Nạp năng lượng học tập 100% pin! Sẵn sàng bay vào vũ trụ! 🚀🔋"
+        ]
+    },
+    mimi: {
+        name: "Mèo Mimi 🐱",
+        sfx: "purr",
+        emojis: ['🐟', '🐱', '🐾', '💖', '🧶'],
+        phrases: [
+            "Meo meo! Bắt được một từ vựng mới rồi, có thưởng cho Mimi cá rán không? 🐟😻",
+            "Cuộn tròn lười biếng một tí... Nhưng nghe rủ học từ vựng là Mimi dậy liền! 🐾🧶",
+            "Meo~ Chúc bạn nhỏ hôm nay giành trọn vẹn 3 sao ở tất cả các trò chơi nhé! ⭐🐱",
+            "Gừ gừ... Vuốt ve đã quá! Mimi tặng bạn một tim to bự nè! 💖✨"
+        ]
+    },
+    octo: {
+        name: "Bo Phù Thủy 🐙",
+        sfx: "bubble",
+        emojis: ['🫧', '🐙', '🪄', '✨', '🎈'],
+        phrases: [
+            "Úm ba la xì bùa! Bo Bo vừa thổi ra bong bóng từ vựng phép thuật nè! 🫧🪄",
+            "8 chiếc xúc xắc của tớ có thể vừa bơi vừa gõ bàn phím siêu nhanh luôn! 🐙💻",
+            "Bùm! Một quả bóng chữ bay lên trời rồi, cùng Bo Bo chộp lấy nào! 🎈✨",
+            "Bọt xà phòng phép thuật biến hình mang theo chữ cái tiếng Anh đó! 🫧🔤"
+        ]
+    }
+};
+
+function interactCartoonCharacter(charId) {
+    const char = SQUAD_DATA[charId];
+    if (!char) return;
+
+    // Play SFX
+    if (window.soundEngine && window.soundEngine.playSfx) {
+        window.soundEngine.playSfx(char.sfx);
+    }
+
+    // Wobble Animation on squad card if exists
+    const cardEl = document.getElementById(`squad${charId.charAt(0).toUpperCase() + charId.slice(1)}`);
+    if (cardEl) {
+        cardEl.classList.remove('is-interacting');
+        void cardEl.offsetWidth; // trigger reflow
+        cardEl.classList.add('is-interacting');
+        setTimeout(() => cardEl.classList.remove('is-interacting'), 700);
+    }
+
+    // Show Speech on Mascot Bubble or Toast
+    const phrase = char.phrases[Math.floor(Math.random() * char.phrases.length)];
+    if (typeof setMascotSpeech === 'function') {
+        setMascotSpeech(`${char.name}: "${phrase}"`, 3500);
+    }
+
+    // Spawn floating fun particles
+    spawnSquadParticles(char.emojis);
+}
+window.interactCartoonCharacter = interactCartoonCharacter;
+
+function spawnSquadParticles(emojis) {
+    const count = 6;
+    for (let i = 0; i < count; i++) {
+        setTimeout(() => {
+            const emoji = emojis[Math.floor(Math.random() * emojis.length)];
+            const span = document.createElement('span');
+            span.textContent = emoji;
+            span.style.position = 'fixed';
+            span.style.zIndex = '9999';
+            span.style.pointerEvents = 'none';
+            span.style.fontSize = (1.5 + Math.random() * 1.2) + 'rem';
+            span.style.left = (window.innerWidth * 0.2 + Math.random() * window.innerWidth * 0.6) + 'px';
+            span.style.top = (window.innerHeight * 0.3 + Math.random() * window.innerHeight * 0.4) + 'px';
+            span.style.transition = 'all 1.2s cubic-bezier(0.2, 0.8, 0.2, 1)';
+            span.style.opacity = '1';
+            document.body.appendChild(span);
+
+            requestAnimationFrame(() => {
+                const tx = (Math.random() - 0.5) * 160;
+                const ty = -80 - Math.random() * 100;
+                span.style.transform = `translate(${tx}px, ${ty}px) scale(1.4) rotate(${tx}deg)`;
+                span.style.opacity = '0';
+            });
+
+            setTimeout(() => span.remove(), 1250);
+        }, i * 120);
+    }
+}
+
+// ============================================================
+// POWERPOINT MORPH WORLD SWITCHER (THEME MORPHING)
+// ============================================================
+
+const MORPH_WORLDS = {
+    rainbow: {
+        name: "Vườn Cầu Vồng",
+        titleLine2: "Tiếng Anh",
+        titleLine3: "Cùng FunWords! 🚀",
+        desc: "Hơn 500+ từ vựng phong phú đang chờ đón bạn! Vườn hoa rực rỡ và các bạn động vật vui tươi sẵn sàng cùng học! 🌈🌻",
+        mascotSay: "Chào mừng bạn đến với Vườn Kỳ Diệu tươi mát! Cùng học vui vẻ nhé! 🌈✨"
+    },
+    space: {
+        name: "Trạm Vũ Trụ",
+        titleLine2: "Dải Ngân Hà",
+        titleLine3: "Vũ Trụ Thần Kỳ! 🛸",
+        desc: "Du hành vào không gian sâu thẳm, thu thập các ngôi sao từ vựng và phi thuyền kiến thức tiếng Anh! 🚀🪐",
+        mascotSay: "Phi hành gia nhí chú ý! Tàu không gian FunWords đã cất cánh khám phá vũ trụ! 🚀👨‍🚀"
+    },
+    candy: {
+        name: "Đảo Kẹo Ngọt",
+        titleLine2: "Vương Quốc Kẹo",
+        titleLine3: "Ngọt Ngào Thú Vị! 🍭",
+        desc: "Tận hưởng những bài học thơm ngon như kẹo dẻo marshmallow và bánh kem socola dâu tây! 🍰🧁",
+        mascotSay: "Mlem mlem! Đảo Kẹo Ngọt đầy ắp bánh kẹo và từ vựng ngọt ngào nè! 🍭😋"
+    },
+    magic: {
+        name: "Lâu Đài Phép Thuật",
+        titleLine2: "Phép Thuật Kỳ Bí",
+        titleLine3: "Mở Khóa Tri Thức! 🏰",
+        desc: "Biến hình từ vựng bằng quyền năng phép thuật của các phù thủy nhí tài ba! ✨🧙‍♂️",
+        mascotSay: "Úm ba la xì bùa! Quyền năng phép thuật FunWords đã được khai mở! 🪄🏰✨"
+    }
+};
+
+let currentMorphWorld = 'rainbow';
+let morphAutoPlayTimer = null;
+
+function switchMorphWorld(worldKey) {
+    if (!MORPH_WORLDS[worldKey]) return;
+    currentMorphWorld = worldKey;
+    const world = MORPH_WORLDS[worldKey];
+
+    // Sound effect
+    if (window.soundEngine && window.soundEngine.playSfx) {
+        window.soundEngine.playSfx('morph');
+    }
+
+    // Update live world text
+    const worldTextEl = document.getElementById('currentWorldText');
+    if (worldTextEl) {
+        worldTextEl.textContent = `${world.name} ✨`;
+    }
+
+    // Morph the Hero element with PowerPoint theme class
+    const heroEl = document.getElementById('heroSection');
+    if (heroEl) {
+        heroEl.classList.remove('theme-rainbow', 'theme-space', 'theme-candy', 'theme-magic');
+        heroEl.classList.add(`theme-${worldKey}`);
+    }
+
+    // Morph Hero Text with smooth fade-in
+    const titleEl = document.getElementById('heroMainTitle');
+    const descEl = document.getElementById('heroMainDesc');
+    if (titleEl) {
+        titleEl.style.opacity = '0';
+        titleEl.style.transform = 'translateY(10px)';
+        titleEl.style.transition = 'all 0.4s ease';
+        setTimeout(() => {
+            titleEl.innerHTML = `
+                <span class="title-line">Khám phá</span>
+                <span class="title-line gradient-text">${world.titleLine2}</span>
+                <span class="title-line">${world.titleLine3}</span>
+            `;
+            titleEl.style.opacity = '1';
+            titleEl.style.transform = 'translateY(0)';
+        }, 300);
+    }
+
+    if (descEl) {
+        descEl.style.opacity = '0';
+        descEl.style.transition = 'opacity 0.4s ease';
+        setTimeout(() => {
+            descEl.innerHTML = world.desc;
+            descEl.style.opacity = '1';
+        }, 300);
+    }
+
+    // Mascot speech
+    if (typeof setMascotSpeech === 'function') {
+        setMascotSpeech(world.mascotSay, 3500);
+    }
+}
+window.switchMorphWorld = switchMorphWorld;
+
+function toggleMorphAutoPlay() {
+    const btn = document.getElementById('btnMorphAutoPlay');
+    const icon = document.getElementById('morphPlayIcon');
+    const worldKeys = Object.keys(MORPH_WORLDS);
+
+    if (morphAutoPlayTimer) {
+        clearInterval(morphAutoPlayTimer);
+        morphAutoPlayTimer = null;
+        if (btn) btn.classList.remove('is-playing');
+        if (icon) icon.textContent = '▶';
+        if (typeof showToast === 'function') showToast('⏹️ Đã dừng chuyển cảnh', 'info');
+    } else {
+        if (btn) btn.classList.add('is-playing');
+        if (icon) icon.textContent = '⏸';
+        if (typeof showToast === 'function') showToast('🎬 Đang tự động chuyển cảnh thế giới!', 'success');
+
+        morphAutoPlayTimer = setInterval(() => {
+            const nextIdx = (worldKeys.indexOf(currentMorphWorld) + 1) % worldKeys.length;
+            switchMorphWorld(worldKeys[nextIdx]);
+        }, 4500);
+    }
+}
+window.toggleMorphAutoPlay = toggleMorphAutoPlay;
+
+// ============================================================
+// PPT MORPH LAB (GEOMETRIC SHAPE MORPHING PLAYGROUND)
+// ============================================================
+
+const MORPH_SHAPES = {
+    circle: {
+        name: "Tròn Xoay Kẹo Dẻo",
+        icon: "🟡",
+        prop: "👑",
+        speech: "Tớ là quả bóng tròn xoe kẹo dẻo! Nhún nhảy tưng tưng khắp phòng! 🟡⚽",
+        bg: "radial-gradient(circle at 35% 35%, #FFD93D 0%, #FF8C42 65%, #FF5722 100%)"
+    },
+    square: {
+        name: "Khối Hộp Vui Vẻ",
+        icon: "🟦",
+        prop: "🤖",
+        speech: "Bíp boop! Khối lập phương vững chãi như thế giới Minecraft vậy á! 🟦🤖",
+        bg: "linear-gradient(135deg, #38BDF8 0%, #0284C7 60%, #0369A1 100%)"
+    },
+    star: {
+        name: "Ngôi Sao Lấp Lánh",
+        icon: "⭐",
+        prop: "✨",
+        speech: "Tada! Tớ biến thành Ngôi Sao 5 cánh sáng chói nhất dải ngân hà! ⭐✨",
+        bg: "radial-gradient(circle at 40% 40%, #FDE047 0%, #EAB308 55%, #CA8A04 100%)"
+    },
+    triangle: {
+        name: "Kim Tự Tháp Tinh Nghịch",
+        icon: "🔺",
+        prop: "🎩",
+        speech: "Kim tự tháp tam giác siêu thăng bằng! Đố bạn đẩy ngã tớ được đó! 🔺🎩",
+        bg: "linear-gradient(135deg, #F472B6 0%, #DB2777 60%, #9D174D 100%)"
+    },
+    drop: {
+        name: "Giọt Nước Nhún Nhảy",
+        icon: "💧",
+        prop: "🫧",
+        speech: "Tõm! Tớ là giọt nước phép thuật nhún nhảy mềm mại như thạch! 💧💦",
+        bg: "linear-gradient(135deg, #2DD4BF 0%, #0D9488 60%, #115E59 100%)"
+    }
+};
+
+const MORPH_PALETTES = [
+    "radial-gradient(circle at 35% 35%, #FFD93D 0%, #FF8C42 65%, #FF5722 100%)",
+    "linear-gradient(135deg, #A855F7 0%, #EC4899 50%, #F43F5E 100%)",
+    "linear-gradient(135deg, #06B6D4 0%, #3B82F6 50%, #6366F1 100%)",
+    "linear-gradient(135deg, #10B981 0%, #14B8A6 50%, #06B6D4 100%)",
+    "radial-gradient(circle at 35% 35%, #F472B6 0%, #FB7185 60%, #E11D48 100%)"
+];
+let currentPaletteIdx = 0;
+
+let currentMorphShape = 'circle';
+let morphLoopTimer = null;
+
+function setMorphShape(shapeKey) {
+    if (!MORPH_SHAPES[shapeKey]) return;
+    currentMorphShape = shapeKey;
+    const shape = MORPH_SHAPES[shapeKey];
+
+    // Sound effect
+    if (window.soundEngine && window.soundEngine.playSfx) {
+        window.soundEngine.playSfx('morph');
+    }
+
+    // Update timeline steps
+    document.querySelectorAll('.timeline-step').forEach(step => {
+        step.classList.remove('active');
+    });
+    const activeStep = document.getElementById(`morphStep-${shapeKey}`);
+    if (activeStep) {
+        activeStep.classList.add('active');
+    }
+
+    // Morph the character body smoothly
+    const bodyEl = document.getElementById('morphCharBody');
+    if (bodyEl) {
+        bodyEl.classList.remove('shape-circle', 'shape-square', 'shape-star', 'shape-triangle', 'shape-drop');
+        bodyEl.classList.add(`shape-${shapeKey}`);
+        bodyEl.style.background = shape.bg;
+    }
+
+    // Update Badge
+    const iconEl = document.getElementById('morphBadgeIcon');
+    const textEl = document.getElementById('morphBadgeText');
+    if (iconEl) iconEl.textContent = shape.icon;
+    if (textEl) textEl.textContent = shape.name;
+
+    // Update Prop
+    const propEl = document.getElementById('morphCharProp');
+    if (propEl) propEl.textContent = shape.prop;
+
+    // Update Speech Bubble
+    const speechEl = document.getElementById('morphSpeechText');
+    if (speechEl) speechEl.textContent = shape.speech;
+
+    // Micro bounce
+    const container = document.getElementById('morphCharContainer');
+    if (container) {
+        container.style.transform = 'scale(1.05)';
+        setTimeout(() => container.style.transform = '', 350);
+    }
+}
+window.setMorphShape = setMorphShape;
+
+function randomMorphShape() {
+    const keys = Object.keys(MORPH_SHAPES);
+    const available = keys.filter(k => k !== currentMorphShape);
+    const chosen = available[Math.floor(Math.random() * available.length)];
+    setMorphShape(chosen);
+}
+window.randomMorphShape = randomMorphShape;
+
+function toggleMorphLabLoop() {
+    const btn = document.getElementById('btnMorphLoop');
+    const icon = document.getElementById('morphLoopIcon');
+    const keys = Object.keys(MORPH_SHAPES);
+
+    if (morphLoopTimer) {
+        clearInterval(morphLoopTimer);
+        morphLoopTimer = null;
+        if (btn) btn.classList.remove('is-playing');
+        if (icon) icon.textContent = '▶';
+        if (typeof showToast === 'function') showToast('⏹️ Đã dừng biến hình', 'info');
+    } else {
+        if (btn) btn.classList.add('is-playing');
+        if (icon) icon.textContent = '⏸';
+        if (typeof showToast === 'function') showToast('🌀 Đang trình chiếu biến hình liên tục!', 'success');
+
+        morphLoopTimer = setInterval(() => {
+            const nextIdx = (keys.indexOf(currentMorphShape) + 1) % keys.length;
+            setMorphShape(keys[nextIdx]);
+        }, 2200);
+    }
+}
+window.toggleMorphLabLoop = toggleMorphLabLoop;
+
+function cycleMorphColorPalette() {
+    currentPaletteIdx = (currentPaletteIdx + 1) % MORPH_PALETTES.length;
+    const bodyEl = document.getElementById('morphCharBody');
+    if (bodyEl) {
+        bodyEl.style.background = MORPH_PALETTES[currentPaletteIdx];
+    }
+    if (window.soundEngine && window.soundEngine.playSfx) {
+        window.soundEngine.playSfx('whoosh');
+    }
+    const speechEl = document.getElementById('morphSpeechText');
+    if (speechEl) {
+        speechEl.textContent = "Ái chà! Tớ vừa thay bộ cánh mới lấp lánh chưa nè! ✨🎨";
+    }
+}
+window.cycleMorphColorPalette = cycleMorphColorPalette;
+
+function pokeMorphCharacter() {
+    if (window.soundEngine && window.soundEngine.playSfx) {
+        window.soundEngine.playSfx('boing');
+    }
+    const bodyEl = document.getElementById('morphCharBody');
+    if (bodyEl) {
+        bodyEl.style.transform = 'scale(1.18, 0.82)';
+        setTimeout(() => bodyEl.style.transform = '', 200);
+    }
+    const pokePhrases = [
+        "Hihi nhột quá! Khen tớ biến hình đẹp đi nào! 😜✨",
+        "Tớ dẻo quẹo như kẹo slime chưa! Tự động biến hình siêu mượt nè! 🍮",
+        "Tớ nhảy múa biến hình muôn màu muôn vẻ luôn đó nha! 🚀💯",
+        "Ui da! Chọc tớ là tớ nhún nhảy tưng bừng nè! 🤪✨"
+    ];
+    const speechEl = document.getElementById('morphSpeechText');
+    if (speechEl) {
+        speechEl.textContent = pokePhrases[Math.floor(Math.random() * pokePhrases.length)];
+    }
+}
+window.pokeMorphCharacter = pokeMorphCharacter;
+
+function initMorphEngine() {
+    // Initial shape setup
+    setMorphShape('circle');
+
+    // 1. Continuous Auto-Morph Loop for Character (Every 3.2 seconds)
+    const morphShapes = ['circle', 'square', 'star', 'triangle', 'drop'];
+    let morphShapeIdx = 0;
+    setInterval(() => {
+        morphShapeIdx = (morphShapeIdx + 1) % morphShapes.length;
+        setMorphShape(morphShapes[morphShapeIdx]);
+        
+        // Also cycle color palettes smoothly
+        currentPaletteIdx = (currentPaletteIdx + 1) % MORPH_PALETTES.length;
+        const bodyEl = document.getElementById('morphCharBody');
+        if (bodyEl) {
+            bodyEl.style.background = MORPH_PALETTES[currentPaletteIdx];
+        }
+    }, 3200);
+
+    // 2. Continuous Auto-Morph Loop for Hero World Themes (Every 7.5 seconds)
+    const worldKeys = Object.keys(MORPH_WORLDS);
+    let worldIdx = 0;
+    setInterval(() => {
+        worldIdx = (worldIdx + 1) % worldKeys.length;
+        switchMorphWorld(worldKeys[worldIdx]);
+    }, 7500);
+}
+
+function initCartoonSquad() {
+    // Continuous automatic antics for the Cartoon Characters (Every 3.8 seconds)
+    const squadKeys = ['rexy', 'pip', 'mimi', 'octo'];
+    let squadIdx = 0;
+    setInterval(() => {
+        squadIdx = (squadIdx + 1) % squadKeys.length;
+        interactCartoonCharacter(squadKeys[squadIdx]);
+    }, 3800);
+}
+
 // ===== Initialize Everything =====
 document.addEventListener('DOMContentLoaded', async () => {
     await loadDataFromAPI(); // Tải dữ liệu từ API (MySQL) trước
@@ -1736,6 +2258,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     initNavScroll();
     loadUserData();
     animateCounters();
+    initMorphEngine();
+    initCartoonSquad();
     
     // Show home page
     showPage('home');
@@ -1749,3 +2273,4 @@ window.addEventListener('resize', () => {
         canvas.height = window.innerHeight;
     }
 });
+
