@@ -110,34 +110,93 @@
                     </div>
                 </div>
                 <div class="hero-mascot">
-                    <div class="mascot-container animate-float">
-                        <div class="mascot-character">
-                            <div class="mascot-body">
-                                <div class="mascot-face">
-                                    <div class="mascot-eyes">
-                                        <div class="mascot-eye left">
-                                            <div class="eye-pupil"></div>
+                    <div class="mascot-container animate-float" id="mascotContainer">
+                        <div class="mascot-character" id="mascotCharacter">
+                            <div class="mascot-bounce-wrapper" id="mascotBounceWrapper">
+                                <div class="mascot-body" id="mascotBody" title="👆 Nhấp chuột & kéo dãn như kẹo dẻo slime, hoặc chọc ghẹo tui nhé!">
+                                    <div class="mascot-face" id="mascotFace">
+                                        <div class="mascot-eyes">
+                                            <div class="mascot-eye left" id="eyeLeft">
+                                                <div class="eye-pupil"></div>
+                                                <div class="eye-dizzy-spiral">🌀</div>
+                                            </div>
+                                            <div class="mascot-eye right" id="eyeRight">
+                                                <div class="eye-pupil"></div>
+                                                <div class="eye-dizzy-spiral">🌀</div>
+                                            </div>
                                         </div>
-                                        <div class="mascot-eye right">
-                                            <div class="eye-pupil"></div>
-                                        </div>
+                                        <div class="mascot-mouth" id="mascotMouth"></div>
+                                        <div class="mascot-blush left" id="mascotBlushLeft"></div>
+                                        <div class="mascot-blush right" id="mascotBlushRight"></div>
+                                        
+                                        <!-- Sweat and tear drops -->
+                                        <div class="mascot-sweat-drop" id="mascotSweat">💧</div>
+                                        <div class="mascot-tear-drop left" id="mascotTearL">💧</div>
+                                        <div class="mascot-tear-drop right" id="mascotTearR">💧</div>
                                     </div>
-                                    <div class="mascot-mouth"></div>
-                                    <div class="mascot-blush left"></div>
-                                    <div class="mascot-blush right"></div>
+                                    
+                                    <!-- Dynamic props layer (glasses, mustache, pirate patch, clown nose) directly over the 200px body -->
+                                    <div class="mascot-props-layer" id="mascotPropsLayer"></div>
+                                    
+                                    <!-- Dynamic pie splat cream layer directly over the 200px body -->
+                                    <div class="mascot-splat-layer" id="mascotSplatLayer"></div>
+                                    
+                                    <!-- Dizzy stars ring directly above body -->
+                                    <div class="mascot-dizzy-ring" id="mascotDizzyRing">
+                                        <span class="dizzy-star star-1">💫</span>
+                                        <span class="dizzy-star star-2">⭐</span>
+                                        <span class="dizzy-star star-3">✨</span>
+                                    </div>
+                                    
+                                    <div class="mascot-hat" id="mascotHat">📚</div>
                                 </div>
-                                <div class="mascot-hat">📚</div>
                             </div>
-                            <div class="mascot-speech-bubble">
+                            <div class="mascot-speech-bubble" id="mascotSpeechBubble">
                                 <span id="mascotSpeech">Hello! Let's learn! 🎉</span>
                             </div>
                         </div>
-                        <div class="floating-letters">
-                            <span class="float-letter" style="--delay: 0s; --x: -80px; --y: -60px;">A</span>
-                            <span class="float-letter" style="--delay: 0.5s; --x: 80px; --y: -40px;">B</span>
-                            <span class="float-letter" style="--delay: 1s; --x: -60px; --y: 40px;">C</span>
-                            <span class="float-letter" style="--delay: 1.5s; --x: 70px; --y: 60px;">Z</span>
-                            <span class="float-letter" style="--delay: 2s; --x: 0px; --y: -80px;">E</span>
+
+                        <!-- Mascot Interactive Prank & Play Toolbar -->
+                        <div class="mascot-interactive-bar" id="mascotInteractiveBar">
+                            <div class="mascot-bar-header">
+                                <span class="mascot-bar-badge">⚡ Góc Phá Phách & Nghịch Ngợm</span>
+                                <span class="mascot-bar-hint">👆 Kéo dãn mặt cười hoặc chọn trò:</span>
+                            </div>
+                            <div class="mascot-tool-grid">
+                                <button type="button" class="mascot-tool-btn" id="btnPrankTickle" onclick="triggerMascotPrank('tickle')" title="Cù lét cười ngặt nghẽo">
+                                    <span class="tool-emoji">🤣</span>
+                                    <span class="tool-text">Chọc Lét</span>
+                                </button>
+                                <button type="button" class="mascot-tool-btn" id="btnPrankSlap" onclick="triggerMascotPrank('slap')" title="Ném bánh kem dính mặt">
+                                    <span class="tool-emoji">🥧</span>
+                                    <span class="tool-text">Ném Bánh</span>
+                                </button>
+                                <button type="button" class="mascot-tool-btn" id="btnPrankProps" onclick="triggerMascotPrank('props')" title="Đeo râu giả, kính ngố, mũ cướp biển">
+                                    <span class="tool-emoji">🥸</span>
+                                    <span class="tool-text">Hóa Trang</span>
+                                </button>
+                                <button type="button" class="mascot-tool-btn" id="btnPrankSpin" onclick="triggerMascotPrank('spin')" title="Quay tít thò lò hoa cả mắt">
+                                    <span class="tool-emoji">🌀</span>
+                                    <span class="tool-text">Quay Cuồng</span>
+                                </button>
+                                <button type="button" class="mascot-tool-btn" id="btnPrankInflate" onclick="triggerMascotPrank('inflate')" title="Bơm to đùng nổ pháo hoa">
+                                    <span class="tool-emoji">🎈</span>
+                                    <span class="tool-text">Bơm Nổ</span>
+                                </button>
+                                <button type="button" class="mascot-tool-btn btn-tool-clean" id="btnPrankClean" onclick="triggerMascotPrank('clean')" title="Tắm rửa sạch sẽ, hoàn nguyên">
+                                    <span class="tool-emoji">🧼</span>
+                                    <span class="tool-text">Tẩy Sạch</span>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Floating Letters MUST have pointer-events: none; so they never block dragging or clicks! -->
+                        <div class="floating-letters" style="pointer-events: none;">
+                            <span class="float-letter" style="--delay: 0s; --x: -80px; --y: -60px; pointer-events: none;">A</span>
+                            <span class="float-letter" style="--delay: 0.5s; --x: 80px; --y: -40px; pointer-events: none;">B</span>
+                            <span class="float-letter" style="--delay: 1s; --x: -60px; --y: 40px; pointer-events: none;">C</span>
+                            <span class="float-letter" style="--delay: 1.5s; --x: 70px; --y: 60px; pointer-events: none;">Z</span>
+                            <span class="float-letter" style="--delay: 2s; --x: 0px; --y: -80px; pointer-events: none;">E</span>
                         </div>
                     </div>
                 </div>
@@ -161,7 +220,7 @@
                         <div class="daily-word-main">
                             <h2 class="daily-word" id="dailyWord">Butterfly</h2>
                             <span class="daily-phonetic" id="dailyPhonetic">/ˈbʌtərflaɪ/</span>
-                            <button class="btn-speak" onclick="speakWord('butterfly')">
+                            <button class="btn-speak" id="dailySpeakBtn" onclick="speakDailyWord()" title="Nghe phát âm từ vựng">
                                 🔊
                             </button>
                         </div>
@@ -349,39 +408,6 @@
             </div>
         </section>
 
-        <!-- Leaderboard Preview -->
-        <section class="section leaderboard-section">
-            <div class="container">
-                <div class="section-header">
-                    <h2 class="section-title">
-                        <span class="title-emoji">🏆</span>
-                        Bảng Xếp Hạng
-                    </h2>
-                    <p class="section-subtitle">Top các bạn nhỏ giỏi nhất tuần này!</p>
-                </div>
-                <div class="leaderboard-cards">
-                    <div class="leader-card rank-2">
-                        <div class="leader-rank">🥈</div>
-                        <div class="leader-avatar">👧</div>
-                        <div class="leader-name">Minh Anh</div>
-                        <div class="leader-score">⭐ 2,450</div>
-                    </div>
-                    <div class="leader-card rank-1">
-                        <div class="leader-crown">👑</div>
-                        <div class="leader-rank">🥇</div>
-                        <div class="leader-avatar">👦</div>
-                        <div class="leader-name">Đức Huy</div>
-                        <div class="leader-score">⭐ 3,200</div>
-                    </div>
-                    <div class="leader-card rank-3">
-                        <div class="leader-rank">🥉</div>
-                        <div class="leader-avatar">👧</div>
-                        <div class="leader-name">Thảo Vy</div>
-                        <div class="leader-score">⭐ 1,890</div>
-                    </div>
-                </div>
-            </div>
-        </section>
 
         <!-- Footer -->
         <footer class="main-footer">
@@ -487,6 +513,9 @@
                         <button class="btn btn-secondary" onclick="loadCurriculumData(true)">
                             <span>🔄 Làm Mới Dữ Liệu</span>
                         </button>
+                        <button class="btn btn-secondary btn-ai-config" onclick="openAiSettingsModal()">
+                            <span>🤖 Cài Đặt Gemini AI</span>
+                        </button>
                         <button class="btn btn-ghost" onclick="showPage('curriculum')">
                             <span>📖 Xem Giao Diện Học Sinh</span>
                         </button>
@@ -561,6 +590,10 @@
                     </div>
                 </div>
             </div>
+            <button class="btn-music-toggle" id="gameBgmToggle" onclick="toggleGameBgm()" title="Bật / Tắt nhạc nền vui nhộn">
+                <span class="music-icon" id="gameBgmIcon">🎵</span>
+                <span class="music-label" id="gameBgmLabel">Nhạc: BẬT</span>
+            </button>
             <div class="gameplay-progress">
                 <div class="progress-bar">
                     <div class="progress-fill" id="gpProgress" style="width: 0%"></div>
@@ -599,7 +632,7 @@
                     </div>
                     <div class="achievement-stat-card">
                         <div class="ach-icon">🔥</div>
-                        <div class="ach-value" id="achStreak">3</div>
+                        <div class="ach-value" id="achStreak">1</div>
                         <div class="ach-label">Chuỗi ngày</div>
                     </div>
                 </div>
@@ -762,7 +795,12 @@
                     <div class="form-group">
                         <label class="form-label">Icon Emoji</label>
                         <div class="emoji-input-wrapper">
-                            <input type="text" id="unitIconInput" class="form-input emoji-field" value="📘" maxlength="4">
+                            <div class="emoji-picker-input-group">
+                                <input type="text" id="unitIconInput" class="form-input emoji-field" value="📘" maxlength="4">
+                                <button type="button" class="btn-open-emoji-picker" onclick="openEmojiPicker('unitIconInput')" title="Mở bảng chọn Emoji sinh động">
+                                    🎨 Bảng Emoji
+                                </button>
+                            </div>
                             <div class="emoji-quick-picks">
                                 <span onclick="pickUnitEmoji('🐾')">🐾</span>
                                 <span onclick="pickUnitEmoji('🍎')">🍎</span>
@@ -904,8 +942,19 @@
                     <h4>➕ Thêm từ vựng mới vào Part này:</h4>
                     <div class="form-grid-3">
                         <div class="form-group">
-                            <label class="form-label">Từ Tiếng Anh (*)</label>
-                            <input type="text" id="newWordEn" class="form-input" placeholder="Ví dụ: Kitten" required>
+                            <div class="form-label-row">
+                                <label class="form-label" style="margin-bottom: 0;">Từ Tiếng Anh (*)</label>
+                                <button type="button" class="btn-tts-mini" onclick="speakCurrentNewWord()" title="Nghe phát âm chuẩn TTS của từ này">
+                                    🔊 Nghe thử (TTS)
+                                </button>
+                            </div>
+                            <div class="ai-input-group">
+                                <input type="text" id="newWordEn" class="form-input" placeholder="Ví dụ: Kitten, Elephant..." required onblur="handleAutoAiCheck()">
+                                <button type="button" id="btnAiCheckWord" class="btn-ai-sparkle" onclick="checkWordWithAI()" title="AI Gemini kiểm tra chính tả & tự động tạo ký hiệu phiên âm IPA">
+                                    <span>✨ AI Gemini</span>
+                                </button>
+                            </div>
+                            <div id="aiWordFeedback" class="ai-word-feedback" style="display: none;"></div>
                         </div>
                         <div class="form-group">
                             <label class="form-label">Nghĩa Tiếng Việt (*)</label>
@@ -913,13 +962,38 @@
                         </div>
                         <div class="form-group">
                             <label class="form-label">Emoji minh họa</label>
-                            <input type="text" id="newWordEmoji" class="form-input" placeholder="🐱" value="⭐" maxlength="4">
+                            <div class="emoji-picker-input-group">
+                                <input type="text" id="newWordEmoji" class="form-input emoji-field" placeholder="🐱" value="⭐" maxlength="4">
+                                <button type="button" class="btn-open-emoji-picker" onclick="openEmojiPicker('newWordEmoji')" title="Mở bảng Emoji tùy chọn">
+                                    🎨 Bảng Emoji
+                                </button>
+                            </div>
+                            <div class="emoji-quick-picks" id="newWordQuickPicks">
+                                <span onclick="pickTargetEmoji('newWordEmoji', '🐶')">🐶</span>
+                                <span onclick="pickTargetEmoji('newWordEmoji', '🐱')">🐱</span>
+                                <span onclick="pickTargetEmoji('newWordEmoji', '🐾')">🐾</span>
+                                <span onclick="pickTargetEmoji('newWordEmoji', '🍎')">🍎</span>
+                                <span onclick="pickTargetEmoji('newWordEmoji', '🍕')">🍕</span>
+                                <span onclick="pickTargetEmoji('newWordEmoji', '🍦')">🍦</span>
+                                <span onclick="pickTargetEmoji('newWordEmoji', '⭐')">⭐</span>
+                                <span onclick="pickTargetEmoji('newWordEmoji', '🌈')">🌈</span>
+                                <span onclick="pickTargetEmoji('newWordEmoji', '⚽')">⚽</span>
+                                <span onclick="pickTargetEmoji('newWordEmoji', '🚗')">🚗</span>
+                                <span onclick="pickTargetEmoji('newWordEmoji', '📚')">📚</span>
+                                <span onclick="pickTargetEmoji('newWordEmoji', '🧸')">🧸</span>
+                            </div>
                         </div>
                     </div>
                     <div class="form-grid-2">
                         <div class="form-group">
-                            <label class="form-label">Phiên âm (Tùy chọn)</label>
-                            <input type="text" id="newWordPhonetic" class="form-input" placeholder="vd: /ˈkɪt.ən/">
+                            <div class="form-label-row">
+                                <label class="form-label" style="margin-bottom: 0;">Phiên âm IPA</label>
+                                <span class="ai-badge-hint">✨ AI tự động điền</span>
+                            </div>
+                            <div class="phonetic-input-group">
+                                <input type="text" id="newWordPhonetic" class="form-input" placeholder="vd: /ˈkɪt.ən/">
+                                <button type="button" class="btn-tts-mini" onclick="speakCurrentNewWord()" title="Phát âm từ vựng này">🔊</button>
+                            </div>
                         </div>
                         <div class="form-group">
                             <label class="form-label">Câu ví dụ (Tùy chọn)</label>
@@ -974,6 +1048,60 @@
 
             <div class="modal-footer-close">
                 <button type="button" class="btn btn-secondary" onclick="closePartContentModal()">Đóng cửa sổ</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===== MODAL BẢNG CHỌN EMOJI TÙY CHỌN CHO BÀI TẬP ===== -->
+    <div class="modal-overlay" id="emojiPickerModal">
+        <div class="modal-content emoji-picker-modal-card">
+            <div class="modal-header">
+                <div>
+                    <h3 class="modal-title">🎨 Bảng Chọn Emoji Bài Học</h3>
+                    <p class="modal-subtitle">Chọn icon sinh động để bài học và từ vựng thêm phần hấp dẫn!</p>
+                </div>
+                <button class="modal-close-btn" onclick="closeEmojiPicker()">✕</button>
+            </div>
+            <div class="emoji-picker-body">
+                <div class="emoji-search-box">
+                    <input type="text" id="emojiSearchInput" class="form-input" placeholder="🔍 Tìm kiếm emoji..." oninput="filterEmojis(this.value)">
+                </div>
+                <div class="emoji-category-tabs" id="emojiCategoryTabs">
+                    <!-- Populated by JS -->
+                </div>
+                <div class="emoji-grid-container" id="emojiGridContainer">
+                    <!-- Populated by JS -->
+                </div>
+            </div>
+            <div class="modal-actions" style="margin-top: 15px;">
+                <button type="button" class="btn btn-secondary" onclick="closeEmojiPicker()">Đóng</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===== MODAL CÀI ĐẶT GEMINI AI ===== -->
+    <div class="modal-overlay" id="modalAiSettings">
+        <div class="modal-content admin-modal-card">
+            <div class="modal-header">
+                <h3 class="modal-title">🤖 Cấu Hình Google Gemini AI</h3>
+                <button class="modal-close-btn" onclick="closeAiSettingsModal()">✕</button>
+            </div>
+            <div class="modal-body" style="display: flex; flex-direction: column; gap: 14px; padding: 10px 0;">
+                <p style="font-size: 0.95rem; color: var(--text-secondary); line-height: 1.5; margin: 0;">
+                    Hệ thống tích hợp <strong>Google Gemini AI</strong> để tự động kiểm tra chính tả khi tạo bài tập, tự động sinh <strong>ký hiệu phiên âm quốc tế IPA</strong>, dịch nghĩa tiếng Việt và câu ví dụ minh họa sinh động cho trẻ em.
+                </p>
+                <div class="ai-status-box" id="aiConfigStatusBox">
+                    <span id="aiStatusIcon">🔄</span> <span id="aiStatusText">Đang kiểm tra trạng thái Gemini AI...</span>
+                </div>
+                <div class="form-group" style="margin-bottom: 0;">
+                    <label class="form-label">Gemini API Key (Google AI Studio)</label>
+                    <input type="password" id="geminiApiKeyInput" class="form-input" placeholder="Nhập API Key: AIzaSy...">
+                    <small class="form-hint">Khóa API sẽ được lưu an toàn trong file <code>.env</code> trên server. Nếu chưa cấu hình, hệ thống sẽ sử dụng bộ xử lý ngữ âm & chính tả thông minh tích hợp sẵn.</small>
+                </div>
+            </div>
+            <div class="modal-actions" style="margin-top: 15px;">
+                <button type="button" class="btn btn-secondary" onclick="closeAiSettingsModal()">Đóng</button>
+                <button type="button" class="btn btn-primary" onclick="saveGeminiApiKey()">💾 Lưu API Key</button>
             </div>
         </div>
     </div>

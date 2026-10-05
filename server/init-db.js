@@ -1,5 +1,6 @@
+const path = require('path');
 const mysql = require('mysql2/promise');
-require('dotenv').config();
+require('dotenv').config({ path: path.join(__dirname, '.env') });
 
 const VOCABULARY = {
     animals: [
@@ -247,6 +248,35 @@ async function initDB() {
             )
         `);
         console.log("Đã tạo bảng: part_questions");
+
+        // 8. Bảng user_stats (Lưu trữ thành tích & tiến độ học tập của người dùng)
+        await connection.query(`
+            CREATE TABLE IF NOT EXISTS user_stats (
+                id INT PRIMARY KEY AUTO_INCREMENT,
+                name VARCHAR(100) DEFAULT 'Bé Yêu',
+                age INT DEFAULT 7,
+                avatar VARCHAR(20) DEFAULT '🦊',
+                total_stars INT DEFAULT 0,
+                games_played INT DEFAULT 0,
+                words_learned INT DEFAULT 0,
+                streak INT DEFAULT 1,
+                last_active_date DATE DEFAULT NULL,
+                unlocked_badges TEXT DEFAULT NULL,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+            )
+        `);
+        console.log("Đã tạo bảng: user_stats");
+
+        // Khởi tạo bản ghi mặc định cho người dùng nếu chưa có (không truncate để giữ thành tích)
+        const [existingStats] = await connection.query('SELECT * FROM user_stats WHERE id = 1');
+        if (existingStats.length === 0) {
+            await connection.query(`
+                INSERT INTO user_stats (id, name, age, avatar, total_stars, games_played, words_learned, streak, last_active_date, unlocked_badges)
+                VALUES (1, 'Bé Yêu', 7, '🦊', 0, 0, 0, 1, CURDATE(), '[]')
+            `);
+            console.log("Đã tạo bản ghi mặc định trong bảng user_stats");
+        }
         
         // --- CHÈN DỮ LIỆU ---
         

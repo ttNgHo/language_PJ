@@ -92,8 +92,8 @@ function stopTimer() {
         clearInterval(gameState.catcherInterval);
         gameState.catcherInterval = null;
     }
-    // Xóa các từ rơi còn sót lại trong Word Catcher
-    document.querySelectorAll('.falling-word').forEach(e => e.remove());
+    // Xóa các từ rơi còn sót lại trong Word Catcher và hiệu ứng điểm nổi
+    document.querySelectorAll('.falling-word, .floating-score-float').forEach(e => e.remove());
     // Hủy lắng nghe phím tắt thẻ ghi nhớ
     if (window.flashcardKeyHandler) {
         window.removeEventListener('keydown', window.flashcardKeyHandler);
@@ -211,6 +211,9 @@ function showFeedback(correct) {
 
 function endGame() {
     stopTimer();
+    if (window.soundEngine && typeof window.soundEngine.stopBgm === 'function') {
+        window.soundEngine.stopBgm();
+    }
     const timeTaken = Math.round((Date.now() - (gameState.startTime || Date.now())) / 1000);
     const totalStars = gameState.correctAnswers >= gameState.totalQuestions ? 3 :
                        gameState.correctAnswers >= gameState.totalQuestions * 0.7 ? 2 :
@@ -249,11 +252,42 @@ function endGame() {
         }
     }
 
-    // Update total stars
+    // Update total stars and game stats (Lưu đồng thời vào LocalStorage và MySQL Database)
+    const newScore = gameState.score || 0;
+    const newWords = gameState.correctAnswers || 0;
+
     const currentStars = parseInt(localStorage.getItem('totalStars') || '0');
-    localStorage.setItem('totalStars', currentStars + gameState.score);
+    localStorage.setItem('totalStars', currentStars + newScore);
     const totalStarsEl = document.getElementById('totalStars');
-    if (totalStarsEl) totalStarsEl.textContent = currentStars + gameState.score;
+    if (totalStarsEl) totalStarsEl.textContent = currentStars + newScore;
+
+    const gamesPlayed = parseInt(localStorage.getItem('gamesPlayed') || '0');
+    localStorage.setItem('gamesPlayed', gamesPlayed + 1);
+
+    const wordsLearned = parseInt(localStorage.getItem('wordsLearned') || '0');
+    localStorage.setItem('wordsLearned', wordsLearned + newWords);
+
+    // Gửi lên server để lưu vĩnh viễn vào cơ sở dữ liệu MySQL
+    if (typeof fetch !== 'undefined') {
+        (async () => {
+            try {
+                const apiBase = (typeof window !== 'undefined' && window.location?.origin?.startsWith('http')) ? '' : 'http://localhost:3000';
+                const res = await fetch(`${apiBase}/api/user-stats/record-game`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ score: newScore, wordsCount: newWords })
+                });
+                if (res.ok) {
+                    const json = await res.json();
+                    if (json.success && json.data) {
+                        if (typeof window !== 'undefined' && window.applyUserStats) window.applyUserStats(json.data);
+                    }
+                }
+            } catch (e) {
+                console.warn('Lỗi lưu thành tích vào MySQL:', e);
+            }
+        })();
+    }
 
     // Update result buttons for teaching mode
     const buttonsContainer = document.querySelector('#resultModal .result-buttons');
@@ -323,7 +357,9 @@ function initWordMatch() {
     const shuffledVi = shuffle(words.map(w => ({ vi: w.vi, en: w.en })));
 
     let selectedEn = null;
+    let selectedEnIndex = null;
     let matchedCount = 0;
+    let isEvaluating = false;
 
     container.innerHTML = `
         <div class="match-game">
@@ -353,39 +389,49 @@ function initWordMatch() {
     `;
 
     window.selectMatchItem = function(el, type) {
-        if (el.classList.contains('matched')) return;
+        if (isEvaluating || el.classList.contains('matched')) return;
 
         if (type === 'en') {
             if (window.soundEngine) window.soundEngine.playSfx('pop');
-            document.querySelectorAll('.en-item').forEach(e => e.classList.remove('selected'));
+            container.querySelectorAll('.en-item').forEach(e => e.classList.remove('selected'));
             el.classList.add('selected');
             selectedEn = el.dataset.word;
+            selectedEnIndex = el.dataset.index;
         } else if (type === 'vi') {
             if (!selectedEn) {
                 if (window.soundEngine) window.soundEngine.playSfx('boing');
                 return;
             }
-            const isCorrect = el.dataset.word === selectedEn;
+            const isCorrect = (el.dataset.word === selectedEn);
+            isEvaluating = true;
             
             if (isCorrect) {
                 el.classList.add('correct', 'matched');
-                const matchedEn = document.querySelector(`.en-item[data-word="${selectedEn}"]`);
+                const matchedEn = container.querySelector(`.en-item[data-index="${selectedEnIndex}"]`);
                 if (matchedEn) matchedEn.classList.add('correct', 'matched');
                 matchedCount++;
                 gameState.currentQuestion = matchedCount;
                 showFeedback(true);
                 
+                container.querySelectorAll('.en-item').forEach(e => e.classList.remove('selected'));
+                selectedEn = null;
+                selectedEnIndex = null;
+                isEvaluating = false;
+
                 if (matchedCount >= words.length) {
                     setTimeout(() => endGame(), 500);
                 }
             } else {
                 el.classList.add('wrong');
-                setTimeout(() => el.classList.remove('wrong'), 500);
                 showFeedback(false);
+                setTimeout(() => {
+                    el.classList.remove('wrong');
+                    container.querySelectorAll('.en-item').forEach(e => e.classList.remove('selected'));
+                    selectedEn = null;
+                    selectedEnIndex = null;
+                    isEvaluating = false;
+                }, 500);
             }
-            
-            document.querySelectorAll('.en-item').forEach(e => e.classList.remove('selected'));
-            selectedEn = null;
             updateGameUI();
         }
     };
@@ -404,8 +450,16 @@ function initSpelling() {
     gameState.totalQuestions = words.length;
     gameState.timer = 120;
     let currentWordIndex = 0;
+    let isProcessing = false;
+    let autoNextTimer = null;
 
     function showSpellingWord(index) {
+        if (autoNextTimer) {
+            clearTimeout(autoNextTimer);
+            autoNextTimer = null;
+        }
+        isProcessing = false;
+
         if (index >= words.length) {
             endGame();
             return;
@@ -420,11 +474,15 @@ function initSpelling() {
                 return `<span class="letter-space" title="Dấu cách">&nbsp;</span>`;
             } else if (char === '-') {
                 return `<span class="letter-hyphen">-</span>`;
+            } else if (!/[a-zA-Z]/i.test(char)) {
+                return `<span class="letter-hyphen">${char}</span>`;
             } else {
                 const idx = letterInputIndex++;
                 return `
                     <input type="text" class="letter-box" maxlength="1" data-index="${idx}"
-                        onkeyup="handleSpellingInput(event, ${idx})"
+                        oninput="handleSpellingInput(event, ${idx})"
+                        onkeydown="handleSpellingKeydown(event, ${idx})"
+                        onkeyup="handleSpellingKeyup(event, ${idx})"
                         onclick="this.select()">
                 `;
             }
@@ -440,9 +498,28 @@ function initSpelling() {
                         🔊 Nghe phát âm
                     </button>
                 </div>
+
                 <div class="spelling-input-area" id="spellingInputArea">
                     ${charElementsHtml}
                 </div>
+
+                <!-- Thanh điều khiển: Kiểm tra, Câu tiếp theo, Gợi ý, Làm lại -->
+                <div class="spelling-action-bar">
+                    <button type="button" class="spelling-act-btn btn-hint" onclick="hintSpellingLetter()" title="Gợi ý 1 chữ cái">
+                        💡 Gợi Ý
+                    </button>
+                    <button type="button" class="spelling-act-btn btn-clear" onclick="clearSpellingInputs()" title="Xóa để gõ lại">
+                        🔄 Làm Lại
+                    </button>
+                    <button type="button" class="spelling-act-btn btn-check" id="spellingCheckBtn" onclick="checkSpellingAnswer()" title="Kiểm tra đáp án (Phím Enter)">
+                        ✅ Kiểm Tra
+                    </button>
+                    <button type="button" class="spelling-act-btn btn-next" id="spellingNextBtn" onclick="nextSpellingWord()" title="Bỏ qua hoặc chuyển sang từ tiếp theo">
+                        Câu Tiếp ➔
+                    </button>
+                </div>
+
+                <!-- Bàn phím ảo trên màn hình -->
                 <div class="spelling-keyboard" id="spellingKeyboard">
                     ${'QWERTYUIOPASDFGHJKLZXCVBNM'.split('').map(l => `
                         <button class="key-btn" onclick="pressKey('${l}')">${l}</button>
@@ -452,79 +529,208 @@ function initSpelling() {
             </div>
         `;
 
-        // Focus first input
+        // Focus ô nhập đầu tiên
         setTimeout(() => {
             const firstInput = container.querySelector('.letter-box');
             if (firstInput) firstInput.focus();
         }, 100);
 
-        // Speak the word
+        // Tự động phát âm từ
         setTimeout(() => speakWord(word.en), 400);
     }
+
+    // Kiểm tra đúng / sai đáp án
+    window.checkSpellingAnswer = function(isAuto = false) {
+        const inputs = Array.from(container.querySelectorAll('.letter-box'));
+        if (inputs.length === 0 || isProcessing) return;
+
+        const targetWord = words[currentWordIndex];
+        if (!targetWord) return;
+
+        const correct = targetWord.en.toLowerCase().replace(/[^a-z]/gi, '');
+        const answer = inputs.map(inp => (inp.value || '').toLowerCase()).join('');
+
+        // Nếu người chơi chủ động bấm nút "Kiểm Tra" nhưng chưa điền đủ
+        if (!isAuto && answer.length < correct.length) {
+            const firstEmpty = inputs.find(inp => !inp.value);
+            if (firstEmpty) {
+                firstEmpty.focus();
+                firstEmpty.classList.add('wrong');
+                setTimeout(() => firstEmpty.classList.remove('wrong'), 500);
+            }
+            if (window.soundEngine) window.soundEngine.playSfx('click');
+            return;
+        }
+
+        isProcessing = true;
+
+        if (answer === correct) {
+            // Đúng đáp án
+            inputs.forEach(inp => {
+                inp.disabled = true;
+                inp.classList.add('correct');
+            });
+            showFeedback(true);
+            gameState.currentQuestion++;
+            updateGameUI();
+
+            // Đổi nút Tiếp Theo thành trạng thái chúc mừng
+            const nextBtn = document.getElementById('spellingNextBtn');
+            if (nextBtn) {
+                nextBtn.classList.add('highlight-next');
+                nextBtn.textContent = 'Câu Tiếp ➔ 🎉';
+            }
+
+            // Phát lại phát âm chuẩn của từ
+            setTimeout(() => speakWord(targetWord.en), 300);
+
+            // Tự động chuyển câu sau 1.3 giây nếu người chơi không tự bấm
+            autoNextTimer = setTimeout(() => {
+                nextSpellingWord(true);
+            }, 1300);
+        } else {
+            // Sai đáp án
+            inputs.forEach((inp, i) => {
+                if (inp.value.toLowerCase() !== correct[i]) {
+                    inp.classList.add('wrong');
+                }
+            });
+            showFeedback(false);
+
+            setTimeout(() => {
+                inputs.forEach(inp => {
+                    inp.classList.remove('wrong');
+                });
+                // Focus vào ô sai đầu tiên để sửa
+                const firstWrong = inputs.find((inp, i) => inp.value.toLowerCase() !== correct[i]) || inputs[0];
+                if (firstWrong) {
+                    firstWrong.focus();
+                    firstWrong.select();
+                }
+                isProcessing = false;
+                updateGameUI();
+            }, 700);
+        }
+    };
+
+    // Chuyển sang câu tiếp theo
+    window.nextSpellingWord = function(fromCorrect = false) {
+        if (autoNextTimer) {
+            clearTimeout(autoNextTimer);
+            autoNextTimer = null;
+        }
+
+        // Nếu chuyển do người chơi bấm "Bỏ qua" khi chưa đúng
+        if (!fromCorrect) {
+            gameState.currentQuestion++;
+            updateGameUI();
+        }
+
+        currentWordIndex++;
+        showSpellingWord(currentWordIndex);
+    };
+
+    // Gợi ý 1 chữ cái còn thiếu hoặc sai
+    window.hintSpellingLetter = function() {
+        if (isProcessing) return;
+        const targetWord = words[currentWordIndex];
+        if (!targetWord) return;
+
+        const correct = targetWord.en.toLowerCase().replace(/[^a-z]/gi, '');
+        const inputs = Array.from(container.querySelectorAll('.letter-box'));
+
+        for (let i = 0; i < inputs.length; i++) {
+            if ((inputs[i].value || '').toLowerCase() !== correct[i]) {
+                inputs[i].value = correct[i];
+                inputs[i].classList.add('hint-glow');
+                setTimeout(() => inputs[i].classList.remove('hint-glow'), 600);
+                if (window.soundEngine) window.soundEngine.playSfx('pop');
+                
+                // Nếu là ô cuối thì kiểm tra luôn
+                if (i === inputs.length - 1 || inputs.every(inp => inp.value)) {
+                    setTimeout(() => checkSpellingAnswer(true), 200);
+                } else if (i < inputs.length - 1) {
+                    inputs[i + 1].focus();
+                }
+                break;
+            }
+        }
+    };
+
+    // Xóa tất cả để gõ lại từ đầu
+    window.clearSpellingInputs = function() {
+        if (isProcessing) return;
+        const inputs = Array.from(container.querySelectorAll('.letter-box'));
+        inputs.forEach(inp => {
+            inp.value = '';
+            inp.classList.remove('correct', 'wrong');
+            inp.disabled = false;
+        });
+        if (inputs[0]) inputs[0].focus();
+        if (window.soundEngine) window.soundEngine.playSfx('click');
+    };
+
+    window.handleSpellingKeydown = function(e, index) {
+        const inputs = Array.from(container.querySelectorAll('.letter-box'));
+        const input = inputs[index];
+        if (!input) return;
+
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            checkSpellingAnswer();
+        } else if (e.key === 'Backspace') {
+            if (window.soundEngine) window.soundEngine.playSfx('click');
+            if (index > 0 && !input.value) {
+                e.preventDefault();
+                inputs[index - 1].value = '';
+                inputs[index - 1].focus();
+            }
+        } else if (e.key === 'ArrowLeft' && index > 0) {
+            inputs[index - 1].focus();
+        } else if (e.key === 'ArrowRight' && index < inputs.length - 1) {
+            inputs[index + 1].focus();
+        }
+    };
+
+    window.handleSpellingKeyup = function(e, index) {
+        // Hỗ trợ đồng bộ
+    };
 
     window.handleSpellingInput = function(e, index) {
         const inputs = Array.from(container.querySelectorAll('.letter-box'));
         const input = inputs[index];
-        if (!input) return;
+        if (!input || isProcessing) return;
         
-        if (e.key === 'Backspace') {
-            if (window.soundEngine) window.soundEngine.playSfx('click');
-            if (index > 0 && !input.value) {
-                inputs[index - 1].focus();
-                inputs[index - 1].select();
-                return;
-            }
-        } else if (input.value) {
+        if (input.value) {
             if (window.soundEngine) window.soundEngine.playSfx('pop');
-        }
-
-        if (input.value && index < inputs.length - 1) {
-            inputs[index + 1].focus();
-        }
-
-        // Check if all filled
-        const allFilled = inputs.every(inp => inp.value);
-        if (allFilled) {
-            const answer = inputs.map(inp => inp.value.toLowerCase()).join('');
-            const correct = words[currentWordIndex].en.toLowerCase().replace(/[\s-]/g, '');
-            
-            if (answer === correct) {
-                inputs.forEach(inp => inp.classList.add('correct'));
-                showFeedback(true);
-                gameState.currentQuestion++;
-                updateGameUI();
-                currentWordIndex++;
-                setTimeout(() => showSpellingWord(currentWordIndex), 1000);
-            } else {
-                inputs.forEach(inp => inp.classList.add('wrong'));
-                showFeedback(false);
-                setTimeout(() => {
-                    inputs.forEach(inp => {
-                        inp.classList.remove('wrong');
-                        inp.value = '';
-                    });
-                    if (inputs[0]) inputs[0].focus();
-                    updateGameUI();
-                }, 800);
+            input.value = input.value.slice(-1);
+            if (index < inputs.length - 1) {
+                inputs[index + 1].focus();
             }
+        }
+
+        // Tự động kiểm tra nếu đã điền đủ các ô
+        const allFilled = inputs.length > 0 && inputs.every(inp => inp.value);
+        if (allFilled) {
+            checkSpellingAnswer(true);
         }
     };
 
     window.pressKey = function(letter) {
         const inputs = Array.from(container.querySelectorAll('.letter-box'));
-        const emptyInput = inputs.find(inp => !inp.value);
+        const emptyInput = inputs.find(inp => !inp.value && !inp.disabled);
         if (emptyInput) {
             if (window.soundEngine) window.soundEngine.playSfx('pop');
             emptyInput.value = letter.toLowerCase();
             const idx = parseInt(emptyInput.dataset.index);
-            const event = new KeyboardEvent('keyup', { key: letter });
+            const event = new Event('input');
             handleSpellingInput(event, idx);
         }
     };
 
     window.pressBackspace = function() {
         const inputs = Array.from(container.querySelectorAll('.letter-box'));
-        const filledInputs = inputs.filter(inp => inp.value);
+        const filledInputs = inputs.filter(inp => inp.value && !inp.disabled);
         if (filledInputs.length > 0) {
             if (window.soundEngine) window.soundEngine.playSfx('click');
             const lastFilled = filledInputs[filledInputs.length - 1];
@@ -593,8 +799,10 @@ function initScramble() {
         `;
     }
 
+    let isScrambleLocked = false;
+
     window.selectScrambleLetter = function(btn) {
-        if (btn.classList.contains('used')) return;
+        if (isScrambleLocked || btn.classList.contains('used')) return;
 
         if (window.soundEngine) window.soundEngine.playSfx('pop');
         btn.classList.add('used');
@@ -614,6 +822,7 @@ function initScramble() {
         // Kiểm tra khi đã điền đủ các chữ cái
         const targetClean = words[currentWordIndex].en.toUpperCase().replace(/[^A-Z]/g, '');
         if (selectedLetters.length === targetClean.length) {
+            isScrambleLocked = true;
             const answer = selectedLetters.map(s => s.letter).join('');
 
             if (answer === targetClean) {
@@ -621,7 +830,10 @@ function initScramble() {
                 gameState.currentQuestion++;
                 updateGameUI();
                 currentWordIndex++;
-                setTimeout(() => showScrambleWord(currentWordIndex), 800);
+                setTimeout(() => {
+                    isScrambleLocked = false;
+                    showScrambleWord(currentWordIndex);
+                }, 800);
             } else {
                 showFeedback(false);
                 updateGameUI();
@@ -635,6 +847,7 @@ function initScramble() {
                         s.textContent = '';
                         s.classList.remove('filled');
                     });
+                    isScrambleLocked = false;
                 }, 600);
             }
         }
@@ -760,7 +973,6 @@ function initFlashcards() {
             if (typeof showToast === 'function') {
                 showToast('🌱 Không sao hết! Xem lại một chút là nhớ liền nè!', 'info');
             }
-            gameState.currentQuestion++; // Vẫn đếm tiến độ
         }
         gameState.currentQuestion = currentCardIndex + 1;
         updateGameUI();
@@ -781,6 +993,12 @@ function initFillBlank() {
     let sourceQuestions = FILL_BLANK_DATA;
     if (gameState.customQuestions && gameState.customQuestions.length > 0) {
         sourceQuestions = gameState.customQuestions;
+    }
+    if (!sourceQuestions || sourceQuestions.length === 0) {
+        sourceQuestions = [
+            { sentence: 'The ___ is playing with a ball.', answer: 'cat', options: ['cat', 'dog', 'fish', 'bird'], hint: 'Con mèo 🐱' },
+            { sentence: 'I eat an ___ every day.', answer: 'apple', options: ['apple', 'orange', 'banana', 'lemon'], hint: 'Quả táo 🍎' }
+        ];
     }
     const questions = shuffle([...sourceQuestions]).slice(0, Math.min(8, sourceQuestions.length));
     gameState.totalQuestions = questions.length;
@@ -819,19 +1037,25 @@ function initFillBlank() {
         options.forEach(o => o.style.pointerEvents = 'none');
 
         const blank = document.getElementById('blankSlot');
-        blank.textContent = selected;
-        blank.classList.add('filled');
+        if (blank) {
+            blank.textContent = selected;
+            blank.classList.add('filled');
+        }
 
-        if (selected === correct) {
+        const isCorrect = (selected.trim().toLowerCase() === correct.trim().toLowerCase());
+
+        if (isCorrect) {
             btn.classList.add('correct');
-            blank.classList.add('correct');
+            if (blank) blank.classList.add('correct');
             showFeedback(true);
         } else {
             btn.classList.add('wrong');
-            blank.classList.add('wrong');
+            if (blank) blank.classList.add('wrong');
             // Highlight correct answer
             options.forEach(o => {
-                if (o.textContent.trim() === correct) o.classList.add('correct');
+                if (o.textContent.trim().toLowerCase() === correct.trim().toLowerCase()) {
+                    o.classList.add('correct');
+                }
             });
             showFeedback(false);
         }
@@ -876,13 +1100,20 @@ function initWordCatcher() {
     }
 
     function startCatcherGame() {
-        const targetWord = getTargetWord();
+        let currentTarget = getTargetWord();
         const availableWords = getAvailableWords();
+
+        function updateTargetPrompt() {
+            const promptEl = container.querySelector('.wordcatcher-prompt');
+            if (promptEl && currentTarget) {
+                promptEl.innerHTML = `Bắt từ: <span class="target-word bounce-pop">${currentTarget.emoji || '⭐'} ${currentTarget.vi}</span>`;
+            }
+        }
         
         container.innerHTML = `
             <div class="wordcatcher-game" id="catcherArea">
                 <div class="wordcatcher-prompt">
-                    Bắt từ: <span class="target-word">${targetWord.emoji} ${targetWord.vi}</span>
+                    Bắt từ: <span class="target-word">${currentTarget.emoji || '⭐'} ${currentTarget.vi}</span>
                 </div>
                 <div class="wordcatcher-clouds">
                     <span class="cloud" style="top: 10px; left: 10%; animation-delay: 0s;">☁️</span>
@@ -898,18 +1129,27 @@ function initWordCatcher() {
             if (gameState.timer <= 0 || caughtCount >= gameState.totalQuestions) return;
 
             // Mix correct and wrong words
-            const isTarget = Math.random() < 0.35;
-            const otherWords = availableWords.filter(w => w.en !== targetWord.en);
-            const word = isTarget || otherWords.length === 0 ? targetWord : shuffle(otherWords)[0];
+            const isTarget = Math.random() < 0.4;
+            const otherWords = availableWords.filter(w => w.en.toLowerCase() !== currentTarget.en.toLowerCase());
+            const word = isTarget || otherWords.length === 0 ? currentTarget : shuffle(otherWords)[0];
             
             const fallingWord = document.createElement('div');
             fallingWord.className = 'falling-word';
             fallingWord.textContent = word.en;
-            fallingWord.style.left = Math.random() * (catcherArea.clientWidth - 120) + 'px';
-            fallingWord.style.setProperty('--fall-duration', (3 + Math.random() * 3) + 's');
+
+            // Tính toán vị trí left an toàn trong khung chơi
+            const safeWidth = Math.max(300, (catcherArea ? catcherArea.clientWidth : 320) || 320);
+            const maxLeft = Math.max(20, safeWidth - 110);
+            const leftPos = Math.floor(10 + Math.random() * maxLeft);
+            fallingWord.style.left = leftPos + 'px';
+            fallingWord.style.setProperty('--fall-duration', (3 + Math.random() * 2.5) + 's');
             
             fallingWord.onclick = function() {
-                if (word.en === targetWord.en) {
+                if (gameState.timer <= 0 || caughtCount >= gameState.totalQuestions) return;
+                if (fallingWord.classList.contains('clicked')) return;
+                fallingWord.classList.add('clicked');
+
+                if (word.en.toLowerCase() === currentTarget.en.toLowerCase()) {
                     fallingWord.classList.add('correct-catch');
 
                     // Floating score +10 popup
@@ -917,8 +1157,8 @@ function initWordCatcher() {
                     floatScore.className = 'floating-score-float';
                     floatScore.textContent = '+10 ⭐';
                     floatScore.style.left = fallingWord.style.left;
-                    floatScore.style.top = (fallingWord.offsetTop - 20) + 'px';
-                    catcherArea.appendChild(floatScore);
+                    floatScore.style.top = Math.max(10, fallingWord.offsetTop - 20) + 'px';
+                    if (catcherArea) catcherArea.appendChild(floatScore);
                     setTimeout(() => { if (floatScore.parentNode) floatScore.remove(); }, 850);
 
                     showFeedback(true);
@@ -929,6 +1169,11 @@ function initWordCatcher() {
                     if (caughtCount >= gameState.totalQuestions) {
                         stopTimer();
                         setTimeout(() => endGame(), 500);
+                    } else {
+                        // Đổi từ vựng mục tiêu mới để trò chơi phong phú, cuốn hút
+                        const nextPool = availableWords.filter(w => w.en.toLowerCase() !== currentTarget.en.toLowerCase());
+                        currentTarget = nextPool.length > 0 ? shuffle(nextPool)[0] : getTargetWord();
+                        updateTargetPrompt();
                     }
                 } else {
                     fallingWord.classList.add('wrong-catch');
@@ -939,17 +1184,17 @@ function initWordCatcher() {
                     flopEl.style.color = '#FF4757';
                     flopEl.textContent = 'Oops! 🍌';
                     flopEl.style.left = fallingWord.style.left;
-                    flopEl.style.top = (fallingWord.offsetTop - 20) + 'px';
-                    catcherArea.appendChild(flopEl);
+                    flopEl.style.top = Math.max(10, fallingWord.offsetTop - 20) + 'px';
+                    if (catcherArea) catcherArea.appendChild(flopEl);
                     setTimeout(() => { if (flopEl.parentNode) flopEl.remove(); }, 850);
 
                     showFeedback(false);
                     updateGameUI();
                 }
-                setTimeout(() => fallingWord.remove(), 500);
+                setTimeout(() => { if (fallingWord.parentNode) fallingWord.remove(); }, 400);
             };
 
-            catcherArea.appendChild(fallingWord);
+            if (catcherArea) catcherArea.appendChild(fallingWord);
             activeWords.push(fallingWord);
 
             // Remove word when it falls off screen
@@ -972,6 +1217,14 @@ function startGame(gameId) {
     currentGame = gameId;
     resetGameState();
     showPage('gameplay');
+
+    // Khởi động nhạc nền vui nhộn dành riêng cho từng trò chơi
+    if (window.soundEngine && typeof window.soundEngine.startBgm === 'function') {
+        window.soundEngine.startBgm(gameId);
+    }
+    if (typeof updateBgmUI === 'function' && window.soundEngine) {
+        updateBgmUI(window.soundEngine.musicEnabled);
+    }
 
     // Small delay for page transition
     setTimeout(() => {

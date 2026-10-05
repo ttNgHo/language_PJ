@@ -2,7 +2,8 @@ const express = require('express');
 const mysql = require('mysql2/promise');
 const cors = require('cors');
 const path = require('path');
-require('dotenv').config();
+require('dotenv').config({ path: path.join(__dirname, '.env') });
+
 
 const app = express();
 const port = process.env.PORT || 3000;
@@ -33,6 +34,440 @@ app.get('/api/test-db', async (req, res) => {
   } catch (error) {
     console.error('Lỗi kết nối MySQL:', error);
     res.status(500).json({ success: false, message: 'Lỗi kết nối database', error: error.message });
+  }
+});
+
+// ==========================================
+// 🏆 USER STATS & ACHIEVEMENTS TABLE & APIS
+// ==========================================
+
+async function initUserStatsTable() {
+  try {
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS user_stats (
+        id INT PRIMARY KEY AUTO_INCREMENT,
+        name VARCHAR(100) DEFAULT 'Bé Yêu',
+        age INT DEFAULT 7,
+        avatar VARCHAR(20) DEFAULT '🦊',
+        total_stars INT DEFAULT 0,
+        games_played INT DEFAULT 0,
+        words_learned INT DEFAULT 0,
+        streak INT DEFAULT 1,
+        last_active_date DATE DEFAULT NULL,
+        unlocked_badges TEXT DEFAULT NULL,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+      )
+    `);
+
+    const [rows] = await pool.query('SELECT * FROM user_stats WHERE id = 1');
+    if (rows.length === 0) {
+      await pool.query(`
+        INSERT INTO user_stats (id, name, age, avatar, total_stars, games_played, words_learned, streak, last_active_date, unlocked_badges)
+        VALUES (1, 'Bé Yêu', 7, '🦊', 0, 0, 0, 1, CURDATE(), '[]')
+      `);
+      console.log('✅ Khởi tạo thành công bản ghi thành tích mặc định trong user_stats');
+    }
+  } catch (err) {
+    console.error('Lỗi khởi tạo bảng user_stats:', err.message);
+  }
+}
+initUserStatsTable();
+
+// Lấy thông tin thành tích & hồ sơ người dùng
+app.get('/api/user-stats', async (req, res) => {
+  try {
+    const [rows] = await pool.query('SELECT * FROM user_stats WHERE id = 1');
+    if (rows.length === 0) {
+      await initUserStatsTable();
+      const [newRows] = await pool.query('SELECT * FROM user_stats WHERE id = 1');
+      return res.json({ success: true, data: newRows[0] });
+    }
+    
+    const user = rows[0];
+    
+    // Kiểm tra tính liên tục của chuỗi ngày học (streak)
+    if (user.last_active_date) {
+      const todayStr = new Date().toISOString().slice(0, 10);
+      const lastDate = new Date(user.last_active_date);
+      const today = new Date(todayStr);
+      const diffTime = today.getTime() - lastDate.getTime();
+      const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+      
+      if (diffDays > 1) {
+        user.streak = 1;
+        await pool.query('UPDATE user_stats SET streak = 1 WHERE id = 1');
+      }
+    }
+
+    res.json({ success: true, data: user });
+  } catch (error) {
+    console.error('Lỗi khi lấy user_stats:', error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// Ghi nhận thành tích sau mỗi ván chơi game (Cộng dồn vào MySQL)
+app.post('/api/user-stats/record-game', async (req, res) => {
+  try {
+    const score = Math.max(0, parseInt(req.body.score) || 0);
+    const wordsCount = Math.max(0, parseInt(req.body.wordsCount) || 0);
+
+    const [rows] = await pool.query('SELECT * FROM user_stats WHERE id = 1');
+    let user = rows[0];
+    if (!user) {
+      await initUserStatsTable();
+      const [fresh] = await pool.query('SELECT * FROM user_stats WHERE id = 1');
+      user = fresh[0];
+    }
+
+    let newStreak = user.streak || 1;
+    const todayStr = new Date().toISOString().slice(0, 10);
+    if (user.last_active_date) {
+      const lastDate = new Date(user.last_active_date);
+      const today = new Date(todayStr);
+      const diffTime = today.getTime() - lastDate.getTime();
+      const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+      
+      if (diffDays === 1) {
+        newStreak += 1;
+      } else if (diffDays > 1) {
+        newStreak = 1;
+      }
+    }
+
+    const newStars = (user.total_stars || 0) + score;
+    const newGames = (user.games_played || 0) + 1;
+    const newWords = (user.words_learned || 0) + wordsCount;
+
+    await pool.query(`
+      UPDATE user_stats 
+      SET total_stars = ?, games_played = ?, words_learned = ?, streak = ?, last_active_date = CURDATE()
+      WHERE id = 1
+    `, [newStars, newGames, newWords, newStreak]);
+
+    const [updatedRows] = await pool.query('SELECT * FROM user_stats WHERE id = 1');
+    res.json({
+      success: true,
+      message: 'Đã lưu thành tích vào cơ sở dữ liệu MySQL thành công!',
+      data: updatedRows[0]
+    });
+  } catch (error) {
+    console.error('Lỗi khi lưu thành tích game:', error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// Cập nhật hồ sơ người dùng (Tên, tuổi, avatar)
+app.put('/api/user-stats/profile', async (req, res) => {
+  try {
+    const { name, age, avatar } = req.body;
+    await pool.query(`
+      UPDATE user_stats
+      SET name = COALESCE(?, name),
+          age = COALESCE(?, age),
+          avatar = COALESCE(?, avatar)
+      WHERE id = 1
+    `, [name ? name.trim() : null, age ? parseInt(age) : null, avatar ? avatar.trim() : null]);
+
+    const [updatedRows] = await pool.query('SELECT * FROM user_stats WHERE id = 1');
+    res.json({
+      success: true,
+      message: 'Đã lưu hồ sơ vào cơ sở dữ liệu MySQL thành công!',
+      data: updatedRows[0]
+    });
+  } catch (error) {
+    console.error('Lỗi khi cập nhật profile:', error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// Đặt lại thành tích (Reset)
+app.post('/api/user-stats/reset', async (req, res) => {
+  try {
+    await pool.query(`
+      UPDATE user_stats
+      SET total_stars = 0, games_played = 0, words_learned = 0, streak = 1, last_active_date = CURDATE()
+      WHERE id = 1
+    `);
+    const [updatedRows] = await pool.query('SELECT * FROM user_stats WHERE id = 1');
+    res.json({
+      success: true,
+      message: 'Đã đặt lại thành tích về 0 trong cơ sở dữ liệu!',
+      data: updatedRows[0]
+    });
+  } catch (error) {
+    console.error('Lỗi reset user_stats:', error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// ==========================================
+// 🤖 GEMINI AI & PHONETICS ASSISTANT APIS
+// ==========================================
+
+// Thuật toán tính khoảng cách chỉnh sửa Levenshtein để phát hiện gõ sai chính tả
+function getLevenshteinDistance(a, b) {
+  const s1 = a.toLowerCase();
+  const s2 = b.toLowerCase();
+  const m = s1.length;
+  const n = s2.length;
+  const dp = Array.from({ length: m + 1 }, () => new Array(n + 1).fill(0));
+
+  for (let i = 0; i <= m; i++) dp[i][0] = i;
+  for (let j = 0; j <= n; j++) dp[0][j] = j;
+
+  for (let i = 1; i <= m; i++) {
+    for (let j = 1; j <= n; j++) {
+      if (s1[i - 1] === s2[j - 1]) {
+        dp[i][j] = dp[i - 1][j - 1];
+      } else {
+        dp[i][j] = 1 + Math.min(dp[i - 1][j], dp[i][j - 1], dp[i - 1][j - 1]);
+      }
+    }
+  }
+  return dp[m][n];
+}
+
+// Bộ quy tắc sinh ký hiệu phiên âm quốc tế IPA gần đúng cho các từ tiếng Anh
+function generateEnglishIpa(word) {
+  let w = word.toLowerCase().trim();
+  // Quy tắc thay thế các cặp chữ cái đặc biệt thành ký hiệu IPA
+  const rules = [
+    { pattern: /tion\b/g, ipa: 'ʃən' },
+    { pattern: /sion\b/g, ipa: 'ʒən' },
+    { pattern: /ture\b/g, ipa: 'tʃər' },
+    { pattern: /ough\b/g, ipa: 'ɔː' },
+    { pattern: /ight\b/g, ipa: 'aɪt' },
+    { pattern: /ould\b/g, ipa: 'ʊd' },
+    { pattern: /ph/g, ipa: 'f' },
+    { pattern: /sh/g, ipa: 'ʃ' },
+    { pattern: /ch/g, ipa: 'tʃ' },
+    { pattern: /th/g, ipa: 'θ' },
+    { pattern: /ck/g, ipa: 'k' },
+    { pattern: /ng\b/g, ipa: 'ŋ' },
+    { pattern: /qu/g, ipa: 'kw' },
+    { pattern: /ee/g, ipa: 'iː' },
+    { pattern: /ea/g, ipa: 'iː' },
+    { pattern: /oo/g, ipa: 'uː' },
+    { pattern: /ou/g, ipa: 'aʊ' },
+    { pattern: /ow/g, ipa: 'aʊ' },
+    { pattern: /oi/g, ipa: 'ɔɪ' },
+    { pattern: /oy/g, ipa: 'ɔɪ' },
+    { pattern: /ai/g, ipa: 'eɪ' },
+    { pattern: /ay/g, ipa: 'eɪ' },
+    { pattern: /ar/g, ipa: 'ɑːr' },
+    { pattern: /er/g, ipa: 'ər' },
+    { pattern: /ir/g, ipa: 'ɜːr' },
+    { pattern: /or/g, ipa: 'ɔːr' },
+    { pattern: /ur/g, ipa: 'ɜːr' }
+  ];
+
+  for (const r of rules) {
+    w = w.replace(r.pattern, r.ipa);
+  }
+
+  // Chuyển đổi các nguyên âm đơn
+  w = w.replace(/a/g, 'æ')
+       .replace(/e/g, 'e')
+       .replace(/i/g, 'ɪ')
+       .replace(/o/g, 'ɒ')
+       .replace(/u/g, 'ʌ')
+       .replace(/y\b/g, 'i');
+
+  return `/${w.length > 3 ? 'ˈ' : ''}${w}/`;
+}
+
+// Phân tích từ vựng bằng từ điển và bộ lọc chính tả
+async function analyzeWordLocally(rawWord) {
+  const word = rawWord.trim();
+  const lower = word.toLowerCase();
+
+  // 1. Kiểm tra chính xác trong bảng words của MySQL
+  const [exactMatch] = await pool.query(
+    'SELECT word_en, word_vi, emoji, phonetic, example FROM words WHERE LOWER(word_en) = ? LIMIT 1',
+    [lower]
+  );
+
+  if (exactMatch.length > 0) {
+    const row = exactMatch[0];
+    return {
+      isCorrect: true,
+      word: row.word_en,
+      correctedWord: row.word_en,
+      phonetic: row.phonetic,
+      meaningVi: row.word_vi,
+      example: row.example,
+      emoji: row.emoji,
+      message: 'Từ vựng chuẩn xác có trong từ điển hệ thống!'
+    };
+  }
+
+  // 2. Tìm từ có khoảng cách sai khác nhỏ nhất trong kho từ vựng hiện có
+  const [allWords] = await pool.query('SELECT word_en, word_vi, emoji, phonetic, example FROM words');
+  let closestWord = null;
+  let minDistance = 999;
+
+  for (const w of allWords) {
+    const dist = getLevenshteinDistance(lower, w.word_en.toLowerCase());
+    if (dist < minDistance) {
+      minDistance = dist;
+      closestWord = w;
+    }
+  }
+
+  // Nếu sai 1 hoặc 2 ký tự (ví dụ: aple -> Apple, elefant -> Elephant, buterfly -> Butterfly)
+  if (closestWord && minDistance <= 2 && lower.length >= 3) {
+    return {
+      isCorrect: false,
+      word: word,
+      correctedWord: closestWord.word_en,
+      phonetic: closestWord.phonetic,
+      meaningVi: closestWord.word_vi,
+      example: closestWord.example,
+      emoji: closestWord.emoji,
+      message: `Có thể bạn viết sai chính tả! Gợi ý đúng: "${closestWord.word_en}"`
+    };
+  }
+
+  // 3. Nếu là từ mới không có trong DB nhưng hợp lệ các chữ cái tiếng Anh
+  const isValidEnglishLetters = /^[a-zA-Z\s\-']+$/.test(word);
+  if (!isValidEnglishLetters) {
+    return {
+      isCorrect: false,
+      word: word,
+      correctedWord: word.replace(/[^a-zA-Z\s\-']/g, ''),
+      phonetic: generateEnglishIpa(word.replace(/[^a-zA-Z\s\-']/g, '')),
+      meaningVi: '',
+      example: '',
+      emoji: '⭐',
+      message: 'Từ chứa ký tự không hợp lệ trong bảng chữ cái tiếng Anh!'
+    };
+  }
+
+  // Sinh phiên âm IPA tự động
+  const generatedPhonetic = generateEnglishIpa(word);
+  return {
+    isCorrect: true,
+    word: word,
+    correctedWord: word,
+    phonetic: generatedPhonetic,
+    meaningVi: '',
+    example: `This is a ${word.toLowerCase()}.`,
+    emoji: '⭐',
+    message: 'Từ vựng tiếng Anh hợp lệ! Đã tự động tạo ký hiệu phiên âm IPA.'
+  };
+}
+
+// API kiểm tra trạng thái cấu hình Gemini API
+app.get('/api/ai/config', (req, res) => {
+  const hasKey = !!(process.env.GEMINI_API_KEY && process.env.GEMINI_API_KEY.trim().length > 5);
+  res.json({
+    success: true,
+    hasGeminiKey: hasKey
+  });
+});
+
+// API lưu khóa GEMINI_API_KEY vào .env
+app.post('/api/ai/set-key', async (req, res) => {
+  try {
+    const { apiKey } = req.body;
+    if (!apiKey || typeof apiKey !== 'string') {
+      return res.status(400).json({ success: false, message: 'Vui lòng cung cấp Gemini API Key hợp lệ!' });
+    }
+
+    const trimmedKey = apiKey.trim();
+    process.env.GEMINI_API_KEY = trimmedKey;
+
+    const envPath = path.join(__dirname, '.env');
+    let envContent = '';
+    const fs = require('fs');
+    if (fs.existsSync(envPath)) {
+      envContent = fs.readFileSync(envPath, 'utf8');
+    }
+    if (envContent.includes('GEMINI_API_KEY=')) {
+      envContent = envContent.replace(/GEMINI_API_KEY=.*/g, `GEMINI_API_KEY=${trimmedKey}`);
+    } else {
+      envContent += `\nGEMINI_API_KEY=${trimmedKey}\n`;
+    }
+    fs.writeFileSync(envPath, envContent.trim() + '\n', 'utf8');
+
+    res.json({ success: true, message: 'Đã lưu cấu hình Gemini API Key thành công!' });
+  } catch (err) {
+    console.error('Lỗi set-key:', err);
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// API kiểm tra chính tả từ vựng và tự động tạo ký hiệu phiên âm (Gemini AI + Fallback)
+app.post('/api/ai/check-word', async (req, res) => {
+  try {
+    const word = (req.body.word || '').trim();
+    if (!word) {
+      return res.status(400).json({ success: false, message: 'Vui lòng nhập từ tiếng Anh cần kiểm tra!' });
+    }
+
+    const apiKey = (req.body.apiKey || process.env.GEMINI_API_KEY || '').trim();
+
+    // 1. Nếu có cấu hình Gemini API Key: Gọi trực tiếp Google Gemini AI
+    if (apiKey) {
+      try {
+        const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
+        const prompt = `You are an expert English linguist and teacher for elementary kids.
+Analyze the following English input: "${word}".
+Determine if it is spelled correctly in standard English.
+Respond ONLY with a valid JSON object without any markdown wrapping (no \`\`\`json):
+{
+  "isCorrect": true or false,
+  "word": "${word}",
+  "correctedWord": "${word} if correct or the correctly spelled word",
+  "phonetic": "standard IPA phonetic transcription with slashes e.g. /ˈkɪt.ən/",
+  "meaningVi": "concise Vietnamese meaning for kids",
+  "example": "one simple child-friendly English sentence",
+  "emoji": "one single most relevant emoji",
+  "message": "short explanation in Vietnamese"
+}`;
+
+        const geminiRes = await fetch(geminiUrl, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            contents: [{ parts: [{ text: prompt }] }],
+            generationConfig: {
+              temperature: 0.2
+            }
+          })
+        });
+
+        if (geminiRes.ok) {
+          const geminiData = await geminiRes.json();
+          let rawText = geminiData.candidates?.[0]?.content?.parts?.[0]?.text || '';
+          rawText = rawText.replace(/```json/gi, '').replace(/```/g, '').trim();
+          const parsed = JSON.parse(rawText);
+          return res.json({
+            success: true,
+            source: 'gemini',
+            data: parsed
+          });
+        } else {
+          console.warn('Google Gemini API phản hồi status:', geminiRes.status);
+        }
+      } catch (geminiErr) {
+        console.warn('Lỗi kết nối Gemini API, chuyển sang bộ xử lý thông minh cục bộ:', geminiErr.message);
+      }
+    }
+
+    // 2. Chạy bộ phân tích từ điển và ngữ âm thông minh (offline / fallback)
+    const localResult = await analyzeWordLocally(word);
+    res.json({
+      success: true,
+      source: 'dictionary',
+      data: localResult
+    });
+
+  } catch (err) {
+    console.error('Lỗi khi kiểm tra từ vựng:', err);
+    res.status(500).json({ success: false, error: err.message });
   }
 });
 

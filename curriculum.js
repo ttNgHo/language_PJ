@@ -783,16 +783,20 @@ async function addWordToPart(event) {
 }
 
 async function deleteWordFromPart(wordId) {
+    if (!confirm('Bạn có chắc muốn xóa từ vựng này khỏi Part bài học không?')) return;
     try {
         const res = await fetch(`${API_BASE}/api/parts/words/${wordId}`, { method: 'DELETE' });
         const json = await res.json();
         if (json.success) {
-            showToast('Đã xóa từ vựng', 'info');
+            showToast('🗑️ Đã xóa từ vựng', 'info');
             await loadPartContentDetails(currentContentPartId);
             await loadCurriculumData();
+        } else {
+            showToast(json.message || 'Không thể xóa từ vựng!', 'error');
         }
     } catch (err) {
         console.error('Lỗi deleteWordFromPart:', err);
+        showToast('Lỗi máy chủ khi xóa từ vựng!', 'error');
     }
 }
 
@@ -833,15 +837,463 @@ async function addQuestionToPart(event) {
 }
 
 async function deleteQuestionFromPart(questionId) {
+    if (!confirm('Bạn có chắc muốn xóa câu hỏi này khỏi Part bài học không?')) return;
     try {
         const res = await fetch(`${API_BASE}/api/parts/questions/${questionId}`, { method: 'DELETE' });
         const json = await res.json();
         if (json.success) {
-            showToast('Đã xóa câu hỏi', 'info');
+            showToast('🗑️ Đã xóa câu hỏi', 'info');
             await loadPartContentDetails(currentContentPartId);
             await loadCurriculumData();
+        } else {
+            showToast(json.message || 'Không thể xóa câu hỏi!', 'error');
         }
     } catch (err) {
         console.error('Lỗi deleteQuestionFromPart:', err);
+        showToast('Lỗi máy chủ khi xóa câu hỏi!', 'error');
     }
 }
+
+// ==========================================
+// 🎨 BẢNG CHỌN EMOJI TÙY CHỌN CHO BÀI TẬP (EMOJI PICKER)
+// ==========================================
+
+const EMOJI_CATEGORIES = [
+    {
+        id: 'animals',
+        name: '🐾 Động vật',
+        emojis: [
+            '🐶', '🐱', '🐭', '🐹', '🐰', '🦊', '🐻', '🐼', '🐨', '🐯', '🦁', '🐮', '🐷', '🐸', '🐵',
+            '🐔', '🐧', '🐦', '🐤', '🦆', '🦅', '🦉', '🦇', '🐺', '🐗', '🐴', '🦄', '🐝', '🐛', '🦋',
+            '🐌', '🐞', '🐜', '🐢', '🐍', '🦎', '🐙', '🦑', '🦐', '🦀', '🐡', '🐠', '🐟', '🐬', '🐳',
+            '🦈', '🐊', '🐆', '🦓', '🦍', '🦧', '🐘', '🦛', '🦏', '🐪', '🐫', '🦒', '🦘', '🐄', '🐎',
+            '🐖', '🐏', '🐑', '🐐', '🦌', '🐕', '🐩', '🐈', '🐓', '🦃', '🦚', '🦜', '🦢', '🦩', '🕊️',
+            '🐇', '🦝', '🦨', '🦥', '🐿️', '🦔'
+        ]
+    },
+    {
+        id: 'food',
+        name: '🍎 Đồ ăn',
+        emojis: [
+            '🍏', '🍎', '🍐', '🍊', '🍋', '🍌', '🍉', '🍇', '🍓', '🫐', '🍈', '🍒', '🍑', '🥭', '🍍',
+            '🥥', '🥝', '🍅', '🥑', '🥦', '🥬', '🥒', '🌽', '🥕', '🥔', '🍠', '🥐', '🍞', '🥖', '🥨',
+            '🧀', '🥚', '🍳', '🥞', '🧇', '🥓', '🍗', '🍖', '🌭', '🍔', '🍟', '🍕', '🥪', '🥙', '🥗',
+            '🍝', '🍜', '🍲', '🍛', '🍣', '🍱', '🥟', '🍤', '🍙', '🍚', '🍧', '🍨', '🍦', '🥧', '🧁',
+            '🍰', '🎂', '🍮', '🍭', '🍬', '🍫', '🍿', '🍩', '🍪', '🥛', '🧃', '🥤', '🧋'
+        ]
+    },
+    {
+        id: 'school',
+        name: '🎒 Học tập',
+        emojis: [
+            '🎒', '📚', '📖', '📕', '📗', '📘', '📙', '📓', '📒', '✏️', '✒️', '🖊️', '🖌️', '🖍️', '📝',
+            '📏', '📐', '📎', '📌', '📍', '✂️', '🔒', '🔑', '🔍', '💡', '💻', '🖥️', '⌨️', '🖱️', '📷',
+            '⏰', '⏱️', '🧭', '🧪', '🔬', '🔭', '🩺', '🎨', '🎬', '🎤', '🎧', '🎼', '🎹', '🥁', '🎷',
+            '🎺', '🎸'
+        ]
+    },
+    {
+        id: 'sports',
+        name: '⚽ Trò chơi',
+        emojis: [
+            '⚽', '🏀', '🏈', '⚾', '🥎', '🎾', '🏐', '🏉', '🥏', '🎱', '🏓', '🏸', '🏒', '🏏', '⛳',
+            '🪁', '🏹', '🎣', '🥊', '🥋', '🛹', '🛼', '⛸️', '🎿', '🏋️', '🤸', '🚴', '🏆', '🥇', '🥈',
+            '🥉', '🏅', '🎖️', '🎫', '🎪', '🎭', '🎲', '♟️', '🎯', '🎳', '🎮', '🕹️', '🧩', '🧸', '🪀'
+        ]
+    },
+    {
+        id: 'nature',
+        name: '🌿 Thiên nhiên',
+        emojis: [
+            '🌲', '🌳', '🌴', '🌵', '🌾', '🌿', '☘️', '🍀', '🍁', '🍂', '🍃', '🍄', '🌸', '💮', '🏵️',
+            '🌹', '🌺', '🌻', '🌼', '🌷', '💐', '🪴', '☀️', '🌤️', '⛅', '☁️', '🌧️', '⛈️', '🌩️', '❄️',
+            '☃️', '🌈', '⚡', '⭐', '🌟', '💫', '✨', '🌠', '🌍', '🌎', '🌏', '🌕', '🌙', '🌞', '🪐'
+        ]
+    },
+    {
+        id: 'vehicles',
+        name: '🚗 Phương tiện',
+        emojis: [
+            '🚗', '🚙', '🚚', '🚛', '🚜', '🏎️', '🏍️', '🛵', '🚲', '🛴', '🛹', '🚑', '🚒', '🚓', '🚕',
+            '🚌', '🚎', '🚆', '🚇', '🚄', '🚅', '🚂', '🛫', '🛩️', '🚀', '🛸', '🚁', '⛵', '🚤', '🚢',
+            '⚓', '🚦', '🛑'
+        ]
+    },
+    {
+        id: 'faces',
+        name: '😃 Biểu cảm',
+        emojis: [
+            '😀', '😃', '😄', '😁', '😆', '😅', '🤣', '😂', '🙂', '😉', '😊', '😇', '🥰', '😍', '🤩',
+            '😘', '😋', '😛', '😜', '🤪', '😝', '🤗', '🤫', '🤔', '🤐', '😎', '🤓', '🧐', '🤠', '🥳',
+            '👶', '🧒', '👦', '👧', '🧑', '👨', '👩', '🧓', '👴', '👵', '👮', '🕵️', '🦸', '🦹', '🧙',
+            '🧚'
+        ]
+    },
+    {
+        id: 'magic',
+        name: '💖 Biểu tượng',
+        emojis: [
+            '❤️', '🧡', '💛', '💚', '💙', '💜', '🖤', '🤍', '💖', '💘', '💝', '💯', '💥', '✨', '👑',
+            '💎', '🔔', '🎁', '🎈', '🎉', '🎊', '🎀', '🔮', '🪄', '⚡', '🔥', '💧', '🎵', '🎶', '⭐',
+            '🌟', '🏆', '🥇'
+        ]
+    }
+];
+
+let currentEmojiTargetInputId = 'newWordEmoji';
+let activeEmojiCategory = 'animals';
+
+function openEmojiPicker(targetInputId) {
+    currentEmojiTargetInputId = targetInputId || 'newWordEmoji';
+    const modal = document.getElementById('emojiPickerModal');
+    if (modal) {
+        initEmojiPickerUI();
+        modal.classList.add('show');
+        if (window.soundEngine) window.soundEngine.playSfx('pop');
+    }
+}
+
+function closeEmojiPicker() {
+    const modal = document.getElementById('emojiPickerModal');
+    if (modal) modal.classList.remove('show');
+}
+
+function initEmojiPickerUI() {
+    const tabsContainer = document.getElementById('emojiCategoryTabs');
+    const searchInput = document.getElementById('emojiSearchInput');
+    if (searchInput) searchInput.value = '';
+    
+    if (tabsContainer) {
+        tabsContainer.innerHTML = EMOJI_CATEGORIES.map(cat => `
+            <button type="button" class="emoji-tab-btn ${cat.id === activeEmojiCategory ? 'active' : ''}" onclick="switchEmojiCategory('${cat.id}')">
+                ${cat.name}
+            </button>
+        `).join('');
+    }
+
+    renderEmojiGrid();
+}
+
+function switchEmojiCategory(catId) {
+    activeEmojiCategory = catId;
+    document.querySelectorAll('.emoji-tab-btn').forEach(btn => {
+        btn.classList.toggle('active', btn.getAttribute('onclick')?.includes(catId));
+    });
+    const searchInput = document.getElementById('emojiSearchInput');
+    if (searchInput) searchInput.value = '';
+    renderEmojiGrid();
+    if (window.soundEngine) window.soundEngine.playSfx('click');
+}
+
+function renderEmojiGrid(filterText = '') {
+    const gridContainer = document.getElementById('emojiGridContainer');
+    if (!gridContainer) return;
+
+    let emojisToRender = [];
+    if (filterText && filterText.trim()) {
+        const query = filterText.trim().toLowerCase();
+        // Lấy toàn bộ emoji khi tìm kiếm
+        EMOJI_CATEGORIES.forEach(cat => {
+            emojisToRender.push(...cat.emojis);
+        });
+        emojisToRender = Array.from(new Set(emojisToRender));
+    } else {
+        const currentCat = EMOJI_CATEGORIES.find(c => c.id === activeEmojiCategory) || EMOJI_CATEGORIES[0];
+        emojisToRender = currentCat.emojis;
+    }
+
+    gridContainer.innerHTML = emojisToRender.map(emoji => `
+        <button type="button" class="emoji-picker-item" onclick="selectEmoji('${emoji}')" title="Chọn ${emoji}">
+            ${emoji}
+        </button>
+    `).join('');
+}
+
+function selectEmoji(emoji) {
+    if (currentEmojiTargetInputId) {
+        const input = document.getElementById(currentEmojiTargetInputId);
+        if (input) {
+            input.value = emoji;
+            input.classList.add('emoji-highlight');
+            setTimeout(() => input.classList.remove('emoji-highlight'), 600);
+        }
+    }
+    if (window.soundEngine) window.soundEngine.playSfx('pop');
+    closeEmojiPicker();
+}
+
+function pickTargetEmoji(targetId, emoji) {
+    const input = document.getElementById(targetId);
+    if (input) {
+        input.value = emoji;
+        input.classList.add('emoji-highlight');
+        setTimeout(() => input.classList.remove('emoji-highlight'), 600);
+    }
+    if (window.soundEngine) window.soundEngine.playSfx('pop');
+}
+
+function filterEmojis(text) {
+    renderEmojiGrid(text);
+}
+
+// Gán ra window để gọi từ inline HTML
+window.openEmojiPicker = openEmojiPicker;
+window.closeEmojiPicker = closeEmojiPicker;
+window.switchEmojiCategory = switchEmojiCategory;
+window.selectEmoji = selectEmoji;
+window.pickTargetEmoji = pickTargetEmoji;
+window.filterEmojis = filterEmojis;
+
+// ==========================================
+// 🤖 GEMINI AI KIỂM TRA CHÍNH TẢ & SINH PHIÊN ÂM IPA & TTS
+// ==========================================
+
+// Phát âm thử từ đang gõ trong form thêm từ bằng Text to Speech
+function speakCurrentNewWord() {
+    const input = document.getElementById('newWordEn');
+    const word = input ? input.value.trim() : '';
+    if (word) {
+        if (typeof speakWord === 'function') {
+            speakWord(word);
+        }
+    } else {
+        if (typeof showToast === 'function') {
+            showToast('Vui lòng nhập từ tiếng Anh để nghe phát âm!', 'info');
+        }
+    }
+}
+window.speakCurrentNewWord = speakCurrentNewWord;
+
+let lastCheckedWord = '';
+let isAiChecking = false;
+
+async function checkWordWithAI(isAuto = false) {
+    const wordInput = document.getElementById('newWordEn');
+    if (!wordInput) return;
+    const word = wordInput.value.trim();
+
+    if (!word) {
+        if (!isAuto && typeof showToast === 'function') {
+            showToast('Vui lòng nhập từ tiếng Anh cần AI kiểm tra!', 'warning');
+        }
+        return;
+    }
+
+    if (isAuto && word === lastCheckedWord) return;
+    if (isAiChecking) return;
+
+    isAiChecking = true;
+    lastCheckedWord = word;
+
+    const btn = document.getElementById('btnAiCheckWord');
+    const feedbackBox = document.getElementById('aiWordFeedback');
+    
+    if (btn) {
+        btn.classList.add('loading');
+        btn.innerHTML = '<span>⏳ Đang kiểm tra...</span>';
+    }
+
+    try {
+        const res = await fetch(`${API_BASE}/api/ai/check-word`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ word })
+        });
+
+        const json = await res.json();
+        if (json.success && json.data) {
+            const data = json.data;
+
+            if (data.isCorrect) {
+                // Điền phiên âm IPA
+                const phoneticInput = document.getElementById('newWordPhonetic');
+                if (phoneticInput && data.phonetic) {
+                    phoneticInput.value = data.phonetic;
+                    phoneticInput.classList.add('ai-highlight-field');
+                    setTimeout(() => phoneticInput.classList.remove('ai-highlight-field'), 800);
+                }
+
+                // Gợi ý nghĩa tiếng Việt nếu đang trống
+                const viInput = document.getElementById('newWordVi');
+                if (viInput && !viInput.value.trim() && data.meaningVi) {
+                    viInput.value = data.meaningVi;
+                    viInput.classList.add('ai-highlight-field');
+                    setTimeout(() => viInput.classList.remove('ai-highlight-field'), 800);
+                }
+
+                // Gợi ý câu ví dụ nếu đang trống
+                const exInput = document.getElementById('newWordExample');
+                if (exInput && !exInput.value.trim() && data.example) {
+                    exInput.value = data.example;
+                }
+
+                // Gợi ý Emoji nếu đang để mặc định
+                const emojiInput = document.getElementById('newWordEmoji');
+                if (emojiInput && (emojiInput.value === '⭐' || !emojiInput.value) && data.emoji) {
+                    emojiInput.value = data.emoji;
+                }
+
+                if (feedbackBox) {
+                    feedbackBox.className = 'ai-word-feedback feedback-success';
+                    feedbackBox.style.display = 'flex';
+                    feedbackBox.innerHTML = `
+                        <div class="fb-icon">✅</div>
+                        <div class="fb-content">
+                            <strong>Chính tả chính xác!</strong>
+                            <span>Phiên âm: <code>${data.phonetic}</code> ${json.source === 'gemini' ? '• 🤖 AI Gemini' : '• 📚 Từ điển'}</span>
+                        </div>
+                    `;
+                }
+
+                if (window.soundEngine) window.soundEngine.playSfx('pop');
+                // Phát âm mẫu từ
+                if (typeof speakWord === 'function') {
+                    setTimeout(() => speakWord(word), 250);
+                }
+            } else {
+                // Phát hiện lỗi chính tả
+                if (feedbackBox) {
+                    feedbackBox.className = 'ai-word-feedback feedback-warning';
+                    feedbackBox.style.display = 'flex';
+                    const safeCorrect = data.correctedWord.replace(/'/g, "\\'");
+                    const safePhonetic = (data.phonetic || '').replace(/'/g, "\\'");
+                    const safeMeaning = (data.meaningVi || '').replace(/'/g, "\\'");
+                    const safeExample = (data.example || '').replace(/'/g, "\\'");
+                    const safeEmoji = (data.emoji || '⭐').replace(/'/g, "\\'");
+
+                    feedbackBox.innerHTML = `
+                        <div class="fb-icon">⚠️</div>
+                        <div class="fb-content">
+                            <div><strong>Có thể bạn viết sai chính tả!</strong></div>
+                            <div class="fb-sub">Gợi ý từ đúng: <strong>"${data.correctedWord}"</strong> <code>${data.phonetic || ''}</code></div>
+                            <button type="button" class="btn-apply-suggestion" onclick="applyAiSuggestion('${safeCorrect}', '${safePhonetic}', '${safeMeaning}', '${safeExample}', '${safeEmoji}')">
+                                👉 Đổi thành "${data.correctedWord}"
+                            </button>
+                        </div>
+                    `;
+                }
+                if (window.soundEngine) window.soundEngine.playSfx('click');
+            }
+        }
+    } catch (err) {
+        console.error('Lỗi khi gọi AI check-word:', err);
+    } finally {
+        isAiChecking = false;
+        if (btn) {
+            btn.classList.remove('loading');
+            btn.innerHTML = '<span>✨ AI Gemini</span>';
+        }
+    }
+}
+window.checkWordWithAI = checkWordWithAI;
+
+function handleAutoAiCheck() {
+    // Tự động kiểm tra sau khi người dùng nhập xong từ tiếng Anh và rời khỏi ô nhập
+    setTimeout(() => {
+        const input = document.getElementById('newWordEn');
+        if (input && input.value.trim().length >= 2) {
+            checkWordWithAI(true);
+        }
+    }, 150);
+}
+window.handleAutoAiCheck = handleAutoAiCheck;
+
+function applyAiSuggestion(correctedWord, phonetic, meaning, example, emoji) {
+    const wordInput = document.getElementById('newWordEn');
+    const phoneticInput = document.getElementById('newWordPhonetic');
+    const viInput = document.getElementById('newWordVi');
+    const exInput = document.getElementById('newWordExample');
+    const emojiInput = document.getElementById('newWordEmoji');
+    const feedbackBox = document.getElementById('aiWordFeedback');
+
+    if (wordInput) wordInput.value = correctedWord;
+    if (phoneticInput && phonetic) phoneticInput.value = phonetic;
+    if (viInput && meaning && !viInput.value.trim()) viInput.value = meaning;
+    if (exInput && example && !exInput.value.trim()) exInput.value = example;
+    if (emojiInput && emoji) emojiInput.value = emoji;
+
+    if (feedbackBox) {
+        feedbackBox.className = 'ai-word-feedback feedback-success';
+        feedbackBox.innerHTML = `
+            <div class="fb-icon">✅</div>
+            <div class="fb-content">
+                <strong>Đã sửa thành "${correctedWord}"!</strong>
+                <span>Phiên âm: <code>${phonetic}</code></span>
+            </div>
+        `;
+    }
+
+    if (window.soundEngine) window.soundEngine.playSfx('pop');
+    if (typeof speakWord === 'function') speakWord(correctedWord);
+}
+window.applyAiSuggestion = applyAiSuggestion;
+
+// ===== Modal Cài Đặt Gemini AI API Key =====
+async function openAiSettingsModal() {
+    const modal = document.getElementById('modalAiSettings');
+    if (modal) {
+        modal.classList.add('show');
+        await checkAiConfigStatus();
+    }
+}
+window.openAiSettingsModal = openAiSettingsModal;
+
+function closeAiSettingsModal() {
+    const modal = document.getElementById('modalAiSettings');
+    if (modal) modal.classList.remove('show');
+}
+window.closeAiSettingsModal = closeAiSettingsModal;
+
+async function checkAiConfigStatus() {
+    const iconEl = document.getElementById('aiStatusIcon');
+    const textEl = document.getElementById('aiStatusText');
+    const box = document.getElementById('aiConfigStatusBox');
+
+    try {
+        const res = await fetch(`${API_BASE}/api/ai/config`);
+        const json = await res.json();
+        if (json.hasGeminiKey) {
+            if (iconEl) iconEl.textContent = '🟢';
+            if (textEl) textEl.textContent = 'Đã kết nối với Google Gemini AI';
+            if (box) box.className = 'ai-status-box status-active';
+        } else {
+            if (iconEl) iconEl.textContent = '🟡';
+            if (textEl) textEl.textContent = 'Đang dùng bộ xử lý ngữ âm thông minh tích hợp (Chưa cấu hình API Key)';
+            if (box) box.className = 'ai-status-box status-pending';
+        }
+    } catch (e) {
+        if (iconEl) iconEl.textContent = '⚪';
+        if (textEl) textEl.textContent = 'Không thể kiểm tra trạng thái AI';
+    }
+}
+
+async function saveGeminiApiKey() {
+    const input = document.getElementById('geminiApiKeyInput');
+    const apiKey = input ? input.value.trim() : '';
+    if (!apiKey) {
+        showToast('Vui lòng nhập API Key!', 'warning');
+        return;
+    }
+
+    try {
+        const res = await fetch(`${API_BASE}/api/ai/set-key`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ apiKey })
+        });
+        const json = await res.json();
+        if (json.success) {
+            showToast('✅ Đã lưu Google Gemini API Key thành công!', 'success');
+            if (input) input.value = '';
+            await checkAiConfigStatus();
+            closeAiSettingsModal();
+        } else {
+            showToast(json.message || 'Lỗi khi lưu key', 'error');
+        }
+    } catch (e) {
+        showToast('Lỗi máy chủ khi lưu key!', 'error');
+    }
+}
+window.saveGeminiApiKey = saveGeminiApiKey;
+
+

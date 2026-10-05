@@ -95,6 +95,35 @@ async function runTestSuite() {
         assert(false, 'GET /api/fill-blank', e.message);
     }
 
+    // 1.5 User Stats & Achievements MySQL API
+    try {
+        const res = await request('GET', '/api/user-stats');
+        assert(res.status === 200 && res.json?.success && typeof res.json?.data?.total_stars === 'number', 'GET /api/user-stats: Lấy thành tích lưu trong MySQL thành công');
+    } catch (e) {
+        assert(false, 'GET /api/user-stats', e.message);
+    }
+
+    try {
+        const recordRes = await request('POST', '/api/user-stats/record-game', { score: 20, wordsCount: 5 });
+        assert(recordRes.status === 200 && recordRes.json?.success && recordRes.json?.data?.total_stars >= 20, 'POST /api/user-stats/record-game: Lưu cộng dồn điểm sao vào MySQL thành công');
+    } catch (e) {
+        assert(false, 'POST /api/user-stats/record-game', e.message);
+    }
+
+    try {
+        const profRes = await request('PUT', '/api/user-stats/profile', { name: 'Bé Yêu Thông Thái', age: 8, avatar: '🦁' });
+        assert(profRes.status === 200 && profRes.json?.data?.name === 'Bé Yêu Thông Thái', 'PUT /api/user-stats/profile: Lưu hồ sơ người dùng vào MySQL thành công');
+    } catch (e) {
+        assert(false, 'PUT /api/user-stats/profile', e.message);
+    }
+
+    try {
+        const resetRes = await request('POST', '/api/user-stats/reset');
+        assert(resetRes.status === 200 && resetRes.json?.data?.total_stars === 0, 'POST /api/user-stats/reset: Đặt lại thành tích về 0 trong MySQL');
+    } catch (e) {
+        assert(false, 'POST /api/user-stats/reset', e.message);
+    }
+
     // 1.5 Units List API
     try {
         const res = await request('GET', '/api/units');
@@ -248,6 +277,40 @@ async function runTestSuite() {
         assert(false, 'Cascade Delete Test', e.message);
     }
 
+    // 1.9 AI Gemini & Check-Word API
+    try {
+        const configRes = await request('GET', '/api/ai/config');
+        assert(configRes.status === 200 && configRes.json?.success === true, 'GET /api/ai/config: Kiểm tra trạng thái cấu hình AI');
+
+        // Check correct spelling & IPA generation
+        const checkCorrectRes = await request('POST', '/api/ai/check-word', { word: 'Elephant' });
+        assert(
+            checkCorrectRes.status === 200 &&
+            checkCorrectRes.json?.success === true &&
+            checkCorrectRes.json?.data?.isCorrect === true &&
+            Boolean(checkCorrectRes.json?.data?.phonetic),
+            'POST /api/ai/check-word: Xác định đúng chính tả "Elephant" và sinh phiên âm IPA',
+            `Phonetic: ${checkCorrectRes.json?.data?.phonetic}`
+        );
+
+        // Check typo detection & correction suggestion
+        const checkTypoRes = await request('POST', '/api/ai/check-word', { word: 'elefant' });
+        assert(
+            checkTypoRes.status === 200 &&
+            checkTypoRes.json?.success === true &&
+            checkTypoRes.json?.data?.isCorrect === false &&
+            checkTypoRes.json?.data?.correctedWord?.toLowerCase() === 'elephant',
+            'POST /api/ai/check-word: Bắt lỗi sai chính tả "elefant" và gợi ý "Elephant"',
+            `Gợi ý: ${checkTypoRes.json?.data?.correctedWord}`
+        );
+
+        // Check empty word validation
+        const emptyRes = await request('POST', '/api/ai/check-word', { word: '' });
+        assert(emptyRes.status === 400, 'POST /api/ai/check-word: Báo lỗi khi từ bỏ trống');
+    } catch (e) {
+        assert(false, 'AI Gemini API Test', e.message);
+    }
+
     // 1.10 Static File Serving
     try {
         const files = ['/', '/styles.css', '/data.js', '/curriculum.js', '/games.js', '/app.js'];
@@ -301,7 +364,7 @@ async function runTestSuite() {
     // 2.5 Kiểm tra Gameplay Header & Stats Elements
     const gpElements = [
         'teachingBanner', 'tbInfo', 'gameplayTitle', 'gpScore', 'gpLives', 'gpTimer',
-        'gpProgress', 'gpProgressText', 'gameplayContainer'
+        'gameBgmToggle', 'gpProgress', 'gpProgressText', 'gameplayContainer'
     ];
     gpElements.forEach(el => {
         assert(htmlContent.includes(`id="${el}"`), `Gameplay Element tồn tại: #${el}`);
@@ -449,6 +512,118 @@ async function runTestSuite() {
     sandbox.gameState.lives = 1;
     sandbox.showFeedback(false);
     assert(sandbox.gameState.lives === 0, 'showFeedback(false): Trừ 1 mạng khi trả lời sai (kết thúc game khi hết mạng)');
+
+    // ==========================================
+    // NHÓM 4: KIỂM THỬ NHẠC NỀN & SOUND ENGINE
+    // ==========================================
+    console.log('\n--- [NHÓM 4: NHẠC NỀN VUI NHỘN & SOUND ENGINE] ---');
+
+    const appCode = fs.readFileSync(path.join(__dirname, 'app.js'), 'utf8');
+
+    // 4.1 Kiểm tra BGM Tracks cho đủ 6 trò chơi
+    const requiredGames = ['wordmatch', 'spelling', 'scramble', 'flashcards', 'fillblank', 'wordcatcher'];
+    requiredGames.forEach(game => {
+        assert(appCode.includes(`${game}: {`), `BGM Track cấu hình riêng cho trò chơi: ${game}`);
+    });
+
+    // 4.2 Kiểm tra các phương thức SoundEngine
+    const soundEngineMethods = ['startBgm', 'stopBgm', 'duckBgm', 'setMusic', 'scheduleBgmStep'];
+    soundEngineMethods.forEach(method => {
+        assert(appCode.includes(`${method}(`), `SoundEngine phương thức tồn tại: ${method}`);
+    });
+
+    // 4.3 Kiểm tra hàm chuyển đổi nhạc nền & cập nhật UI
+    assert(appCode.includes('function updateBgmUI'), 'Hàm updateBgmUI tồn tại');
+    assert(appCode.includes('function toggleGameBgm'), 'Hàm toggleGameBgm tồn tại');
+
+    // ==========================================
+    // NHÓM 5: TÍNH NĂNG MỚI THEO YÊU CẦU NGƯỜI DÙNG
+    // ==========================================
+    console.log('\n--- [NHÓM 5: TÍNH NĂNG MỚI THEO YÊU CẦU NGƯỜI DÙNG] ---');
+    const curriculumCode = fs.readFileSync(path.join(__dirname, 'curriculum.js'), 'utf8');
+
+    // 5.1 Gỡ bỏ bảng xếp hạng
+    assert(!htmlContent.includes('leaderboard-section'), 'Bảng xếp hạng đã được gỡ bỏ hoàn toàn khỏi giao diện');
+
+    // 5.2 Sửa lỗi phát âm từ vựng hôm nay
+    assert(!htmlContent.includes("speakWord('butterfly')"), "Nút phát âm không còn bị hardcode cố định 'butterfly'");
+    assert(htmlContent.includes('speakDailyWord'), "Nút phát âm gọi hàm speakDailyWord linh hoạt theo từ hôm nay");
+    assert(appCode.includes('function speakDailyWord'), 'Hàm speakDailyWord tồn tại và phát âm chính xác từ hiển thị');
+
+    // 5.3 Trò chơi Đánh vần (Spelling Bee): Nút kiểm tra, chuyển câu, gợi ý, làm lại
+    assert(gamesCode.includes('checkSpellingAnswer'), 'Spelling Bee: Có hàm checkSpellingAnswer để kiểm tra đúng/sai');
+    assert(gamesCode.includes('nextSpellingWord'), 'Spelling Bee: Có hàm nextSpellingWord để chuyển câu tiếp theo');
+    assert(gamesCode.includes('hintSpellingLetter'), 'Spelling Bee: Có hàm hintSpellingLetter để gợi ý chữ cái');
+    assert(gamesCode.includes('clearSpellingInputs'), 'Spelling Bee: Có hàm clearSpellingInputs để làm lại từ đầu');
+    assert(gamesCode.includes('spelling-action-bar'), 'Spelling Bee: Giao diện chứa thanh nút bấm điều khiển');
+
+    // 5.4 Bảng chọn Emoji tùy chọn khi tạo bài tập
+    assert(htmlContent.includes('id="emojiPickerModal"'), 'Giao diện chứa modal bảng chọn emoji #emojiPickerModal');
+    assert(curriculumCode.includes('EMOJI_CATEGORIES'), 'curriculum.js chứa kho dữ liệu EMOJI_CATEGORIES phong phú');
+    assert(curriculumCode.includes('openEmojiPicker'), 'Hàm openEmojiPicker sẵn sàng để mở bảng chọn emoji');
+    assert(curriculumCode.includes('selectEmoji'), 'Hàm selectEmoji sẵn sàng để điền icon vào bài tập');
+
+    // 5.5 Lưu trữ thành tích và hồ sơ vào MySQL Database
+    assert(appCode.includes('applyUserStats'), 'Frontend app.js: Có hàm applyUserStats đồng bộ thành tích');
+    assert(appCode.includes('/api/user-stats'), 'Frontend app.js: Tải thành tích từ MySQL khi khởi động');
+    assert(gamesCode.includes('/api/user-stats/record-game'), 'Frontend games.js: Tự động gửi kết quả ván chơi lưu vào MySQL database');
+
+
+    // ==========================================
+    // NHÓM 6: KIỂM THỬ GEMINI AI & CƠ CHẾ TEXT TO SPEECH (TTS)
+    // ==========================================
+    console.log('\n--- [NHÓM 6: GEMINI AI & CƠ CHẾ TEXT TO SPEECH (TTS)] ---');
+
+    // 6.1 Kiểm tra UI hỗ trợ TTS khi tạo bài tập
+    assert(htmlContent.includes('speakCurrentNewWord'), 'Modal tạo từ vựng: Có nút phát âm nghe thử TTS speakCurrentNewWord()');
+    assert(htmlContent.includes('btn-tts-mini'), 'Giao diện: Có class CSS btn-tts-mini cho nút TTS nghe thử');
+
+    // 6.2 Kiểm tra UI tích hợp Gemini AI
+    assert(htmlContent.includes('id="btnAiCheckWord"'), 'Modal tạo bài tập: Có nút kích hoạt AI kiểm tra từ vựng #btnAiCheckWord');
+    assert(htmlContent.includes('id="aiWordFeedback"'), 'Modal tạo bài tập: Có banner thông báo phản hồi chính tả của AI #aiWordFeedback');
+    assert(htmlContent.includes('id="newWordPhonetic"'), 'Modal tạo bài tập: Có trường nhập/tự động điền ký hiệu phiên âm #newWordPhonetic');
+    assert(htmlContent.includes('id="modalAiSettings"'), 'Giao diện Admin: Có Modal cài đặt API Key cho Gemini AI #modalAiSettings');
+
+    // 6.3 Kiểm tra logic Frontend trong curriculum.js
+    assert(curriculumCode.includes('speakCurrentNewWord'), 'curriculum.js: Có hàm speakCurrentNewWord sử dụng Web SpeechSynthesis');
+    assert(curriculumCode.includes('checkWordWithAI'), 'curriculum.js: Có hàm checkWordWithAI gọi API kiểm tra chính tả & sinh phiên âm');
+    assert(curriculumCode.includes('applyAiSuggestion'), 'curriculum.js: Có hàm applyAiSuggestion sửa nhanh từ khi AI phát hiện lỗi chính tả');
+    assert(curriculumCode.includes('openAiSettingsModal'), 'curriculum.js: Có hàm mở bảng cấu hình Gemini AI');
+    assert(curriculumCode.includes('saveGeminiApiKey'), 'curriculum.js: Có hàm lưu khóa API Gemini vào server');
+
+
+    // ==========================================
+    // NHÓM 7: KIỂM THỬ TƯƠNG TÁC EMOJI MẶT CƯỜI MASCOT (KÉO DÃN, CHỌC GHẸO, PHÁ PHÁCH)
+    // ==========================================
+    console.log('\n--- [NHÓM 7: TƯƠNG TÁC EMOJI MẶT CƯỜI MASCOT (KÉO DÃN, CHỌC GHẸO, PHÁ PHÁCH)] ---');
+
+    // 7.1 Cấu trúc DOM của Mascot và thanh công cụ phá phách
+    assert(htmlContent.includes('id="mascotBody"'), 'Mascot: Có phần tử thân #mascotBody sẵn sàng nhận sự kiện chuột/touch');
+    assert(htmlContent.includes('id="mascotFace"'), 'Mascot: Có khuôn mặt biểu cảm #mascotFace');
+    assert(htmlContent.includes('id="mascotPropsLayer"'), 'Mascot: Có layer phụ kiện hóa trang #mascotPropsLayer');
+    assert(htmlContent.includes('id="mascotSplatLayer"'), 'Mascot: Có layer dính bánh kem #mascotSplatLayer');
+    assert(htmlContent.includes('id="mascotDizzyRing"'), 'Mascot: Có vòng sao chóng mặt #mascotDizzyRing');
+    assert(htmlContent.includes('id="mascotInteractiveBar"'), 'Giao diện: Có thanh công cụ tương tác phá phách #mascotInteractiveBar');
+
+    // 7.2 Các nút tương tác phá phách
+    const prankButtons = ['btnPrankTickle', 'btnPrankSlap', 'btnPrankProps', 'btnPrankSpin', 'btnPrankInflate', 'btnPrankClean'];
+    prankButtons.forEach(btnId => {
+        assert(htmlContent.includes(`id="${btnId}"`), `Nút phá phách tồn tại: #${btnId}`);
+    });
+
+    // 7.3 Logic JavaScript trong app.js
+    assert(appCode.includes('function initMascotInteractions'), 'app.js: Có hàm initMascotInteractions xử lý kéo dãn vật lý');
+    assert(appCode.includes('function triggerMascotPrank'), 'app.js: Có hàm triggerMascotPrank điều khiển 6 trò phá phách');
+    assert(appCode.includes('function setMascotSpeech'), 'app.js: Có hàm setMascotSpeech phản hồi thoại khi bị chọc');
+    assert(appCode.includes('function spawnFloatingMascotEmoji'), 'app.js: Có hàm spawnFloatingMascotEmoji bắn hiệu ứng emoji');
+    assert(appCode.includes('function triggerConfettiBurst'), 'app.js: Có hàm triggerConfettiBurst nổ pháo hoa khi bơm nổ');
+
+    // 7.4 Âm thanh hiệu ứng SoundEngine cho Mascot
+    const mascotSounds = ['squeak', 'giggle', 'splat', 'dizzy'];
+    mascotSounds.forEach(snd => {
+        assert(appCode.includes(`type === '${snd}'`), `SoundEngine: Hỗ trợ âm thanh tương tác: '${snd}'`);
+    });
+
 
     // ==========================================
     // TỔNG KẾT BÁO CÁO
