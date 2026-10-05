@@ -8,6 +8,9 @@ function showPage(pageId) {
     // Stop any running game timers
     stopTimer();
 
+    // Close any open modals
+    document.querySelectorAll('.modal-overlay').forEach(m => m.classList.remove('show'));
+
     // Hide all pages
     document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
     
@@ -27,6 +30,8 @@ function showPage(pageId) {
     document.querySelector('.nav-links')?.classList.remove('show');
 
     // Page-specific init
+    if (pageId === 'curriculum') renderCurriculumPage();
+    if (pageId === 'admin') renderAdminPage();
     if (pageId === 'games') populateGamesList();
     if (pageId === 'achievements') populateAchievements();
 }
@@ -179,16 +184,228 @@ function saveProfile() {
     showToast('💾 Đã lưu hồ sơ!', 'success');
 }
 
-// ===== Text-to-Speech =====
-function speakWord(word) {
-    if ('speechSynthesis' in window) {
-        const utterance = new SpeechSynthesisUtterance(word);
-        utterance.lang = 'en-US';
-        utterance.rate = 0.8;
-        utterance.pitch = 1.1;
-        speechSynthesis.speak(utterance);
+// ===== Sound & Music Engine (Web Audio API - No External Files) =====
+class SoundEngine {
+    constructor() {
+        this.ctx = null;
+        this.soundEnabled = localStorage.getItem('soundEnabled') !== 'false';
+        this.musicEnabled = localStorage.getItem('musicEnabled') === 'true';
+        this.bgmTimer = null;
+        this.bgmStep = 0;
+    }
+
+    init() {
+        if (!this.ctx) {
+            const AudioCtx = window.AudioContext || window.webkitAudioContext;
+            if (AudioCtx) this.ctx = new AudioCtx();
+        }
+        if (this.ctx && this.ctx.state === 'suspended') {
+            this.ctx.resume();
+        }
+    }
+
+    playSfx(type) {
+        if (!this.soundEnabled) return;
+        this.init();
+        if (!this.ctx) return;
+
+        const now = this.ctx.currentTime;
+        if (type === 'correct') {
+            // Bright cheerful bell triad: C5 (523Hz), E5 (659Hz), G5 (784Hz), C6 (1046Hz)
+            [523.25, 659.25, 783.99, 1046.5].forEach((freq, idx) => {
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+                osc.type = 'triangle';
+                osc.frequency.setValueAtTime(freq, now + idx * 0.07);
+                gain.gain.setValueAtTime(0.2, now + idx * 0.07);
+                gain.gain.exponentialRampToValueAtTime(0.001, now + idx * 0.07 + 0.35);
+                osc.connect(gain);
+                gain.connect(this.ctx.destination);
+                osc.start(now + idx * 0.07);
+                osc.stop(now + idx * 0.07 + 0.38);
+            });
+        } else if (type === 'wrong') {
+            // Funny cartoon slide / trombone wah-wah: 320Hz -> 220Hz -> 140Hz
+            const osc = this.ctx.createOscillator();
+            const gain = this.ctx.createGain();
+            osc.type = 'sawtooth';
+            osc.frequency.setValueAtTime(320, now);
+            osc.frequency.linearRampToValueAtTime(220, now + 0.15);
+            osc.frequency.linearRampToValueAtTime(130, now + 0.38);
+            gain.gain.setValueAtTime(0.18, now);
+            gain.gain.exponentialRampToValueAtTime(0.001, now + 0.4);
+            osc.connect(gain);
+            gain.connect(this.ctx.destination);
+            osc.start(now);
+            osc.stop(now + 0.42);
+        } else if (type === 'boing') {
+            // Funny cartoon spring boing: rapid frequency sweep up with vibrato
+            const osc = this.ctx.createOscillator();
+            const gain = this.ctx.createGain();
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(160, now);
+            osc.frequency.exponentialRampToValueAtTime(620, now + 0.18);
+            osc.frequency.exponentialRampToValueAtTime(380, now + 0.3);
+            gain.gain.setValueAtTime(0.25, now);
+            gain.gain.exponentialRampToValueAtTime(0.001, now + 0.35);
+            osc.connect(gain);
+            gain.connect(this.ctx.destination);
+            osc.start(now);
+            osc.stop(now + 0.36);
+        } else if (type === 'pop') {
+            // Snappy bubble pop
+            const osc = this.ctx.createOscillator();
+            const gain = this.ctx.createGain();
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(950, now);
+            osc.frequency.exponentialRampToValueAtTime(120, now + 0.05);
+            gain.gain.setValueAtTime(0.18, now);
+            gain.gain.exponentialRampToValueAtTime(0.001, now + 0.05);
+            osc.connect(gain);
+            gain.connect(this.ctx.destination);
+            osc.start(now);
+            osc.stop(now + 0.06);
+        } else if (type === 'whoosh') {
+            // Card flip whoosh
+            const osc = this.ctx.createOscillator();
+            const gain = this.ctx.createGain();
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(300, now);
+            osc.frequency.exponentialRampToValueAtTime(800, now + 0.08);
+            osc.frequency.exponentialRampToValueAtTime(200, now + 0.15);
+            gain.gain.setValueAtTime(0.12, now);
+            gain.gain.exponentialRampToValueAtTime(0.001, now + 0.18);
+            osc.connect(gain);
+            gain.connect(this.ctx.destination);
+            osc.start(now);
+            osc.stop(now + 0.19);
+        } else if (type === 'combo') {
+            // High-energy powerup arpeggio
+            [523.25, 659.25, 783.99, 1046.5, 1318.5].forEach((freq, idx) => {
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+                osc.type = 'triangle';
+                osc.frequency.setValueAtTime(freq, now + idx * 0.05);
+                gain.gain.setValueAtTime(0.22, now + idx * 0.05);
+                gain.gain.exponentialRampToValueAtTime(0.001, now + idx * 0.05 + 0.35);
+                osc.connect(gain);
+                gain.connect(this.ctx.destination);
+                osc.start(now + idx * 0.05);
+                osc.stop(now + idx * 0.05 + 0.38);
+            });
+        } else if (type === 'win') {
+            // Celebration fanfare: C5, E5, G5, C6
+            [523.25, 659.25, 783.99, 1046.5].forEach((freq, idx) => {
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(freq, now + idx * 0.12);
+                gain.gain.setValueAtTime(0.25, now + idx * 0.12);
+                gain.gain.exponentialRampToValueAtTime(0.001, now + idx * 0.12 + 0.45);
+                osc.connect(gain);
+                gain.connect(this.ctx.destination);
+                osc.start(now + idx * 0.12);
+                osc.stop(now + idx * 0.12 + 0.48);
+            });
+        } else if (type === 'click') {
+            const osc = this.ctx.createOscillator();
+            const gain = this.ctx.createGain();
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(700, now);
+            osc.frequency.exponentialRampToValueAtTime(250, now + 0.04);
+            gain.gain.setValueAtTime(0.08, now);
+            gain.gain.exponentialRampToValueAtTime(0.001, now + 0.04);
+            osc.connect(gain);
+            gain.connect(this.ctx.destination);
+            osc.start(now);
+            osc.stop(now + 0.05);
+        }
+    }
+
+    startBgm() {
+        if (!this.musicEnabled) return;
+        this.init();
+        if (!this.ctx || this.bgmTimer) return;
+
+        const melody = [261.63, 329.63, 392.00, 523.25, 392.00, 329.63, 349.23, 392.00];
+        this.bgmStep = 0;
+
+        this.bgmTimer = setInterval(() => {
+            if (!this.musicEnabled || !this.ctx) {
+                this.stopBgm();
+                return;
+            }
+            const now = this.ctx.currentTime;
+            const freq = melody[this.bgmStep % melody.length];
+            this.bgmStep++;
+
+            const osc = this.ctx.createOscillator();
+            const gain = this.ctx.createGain();
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(freq, now);
+            gain.gain.setValueAtTime(0.03, now);
+            gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.45);
+            osc.connect(gain);
+            gain.connect(this.ctx.destination);
+            osc.start(now);
+            osc.stop(now + 0.5);
+        }, 550);
+    }
+
+    stopBgm() {
+        if (this.bgmTimer) {
+            clearInterval(this.bgmTimer);
+            this.bgmTimer = null;
+        }
+    }
+
+    setSound(enabled) {
+        this.soundEnabled = enabled;
+        localStorage.setItem('soundEnabled', enabled);
+    }
+
+    setMusic(enabled) {
+        this.musicEnabled = enabled;
+        localStorage.setItem('musicEnabled', enabled);
+        if (enabled) {
+            this.startBgm();
+        } else {
+            this.stopBgm();
+        }
     }
 }
+
+const soundEngine = new SoundEngine();
+window.soundEngine = soundEngine;
+
+// ===== Text-to-Speech =====
+function speakWord(word) {
+    if (!soundEngine.soundEnabled) return;
+    if ('speechSynthesis' in window) {
+        window.speechSynthesis.cancel();
+        const utterance = new SpeechSynthesisUtterance(word);
+        utterance.lang = 'en-US';
+        utterance.rate = 0.85;
+        utterance.pitch = 1.05;
+        window.speechSynthesis.speak(utterance);
+    }
+}
+
+// ===== Cheerful Voice Praise (Speech Synthesis) =====
+function speakCheer(phrase) {
+    if (!soundEngine.soundEnabled) return;
+    if ('speechSynthesis' in window) {
+        const cheerPhrases = ['Awesome!', 'Bingo!', 'Super star!', 'You rock!', 'Fantastic!', 'Hooray!'];
+        const text = phrase || cheerPhrases[Math.floor(Math.random() * cheerPhrases.length)];
+        const utterance = new SpeechSynthesisUtterance(text);
+        utterance.lang = 'en-US';
+        utterance.rate = 1.05;
+        utterance.pitch = 1.35; // Cute cheerful pitch for kids
+        utterance.volume = 0.95;
+        window.speechSynthesis.speak(utterance);
+    }
+}
+window.speakCheer = speakCheer;
 
 // ===== Toast Notifications =====
 function showToast(message, type = 'info') {
@@ -405,6 +622,28 @@ function initDarkMode() {
     });
 }
 
+// ===== Sound & Music Settings Toggle =====
+function initSettings() {
+    const soundToggle = document.getElementById('soundToggle');
+    const musicToggle = document.getElementById('musicToggle');
+    
+    if (soundToggle) {
+        soundToggle.checked = soundEngine.soundEnabled;
+        soundToggle.addEventListener('change', () => {
+            soundEngine.setSound(soundToggle.checked);
+            showToast(soundToggle.checked ? '🔊 Đã bật âm thanh hiệu ứng!' : '🔇 Đã tắt âm thanh', 'info');
+        });
+    }
+
+    if (musicToggle) {
+        musicToggle.checked = soundEngine.musicEnabled;
+        musicToggle.addEventListener('change', () => {
+            soundEngine.setMusic(musicToggle.checked);
+            showToast(musicToggle.checked ? '🎵 Đã bật nhạc nền!' : '🎵 Đã tắt nhạc nền', 'info');
+        });
+    }
+}
+
 // ===== Scroll Reveal =====
 function initScrollReveal() {
     const observer = new IntersectionObserver((entries) => {
@@ -445,16 +684,56 @@ function initNavScroll() {
             nav.style.boxShadow = 'none';
         }
     });
+
+    // Close mobile menu when clicking outside
+    document.addEventListener('click', (e) => {
+        const navLinks = document.querySelector('.nav-links');
+        const menuBtn = document.querySelector('.mobile-menu-btn');
+        if (navLinks && navLinks.classList.contains('show') && !navLinks.contains(e.target) && !menuBtn?.contains(e.target)) {
+            navLinks.classList.remove('show');
+        }
+    });
+}
+
+// ===== API Data Fetching =====
+async function loadDataFromAPI() {
+    const apiBase = window.location.origin.startsWith('http') ? '' : 'http://localhost:3000';
+    try {
+        const [wordsRes, dailyWordsRes, fillBlankRes] = await Promise.all([
+            fetch(`${apiBase}/api/words`),
+            fetch(`${apiBase}/api/daily-words`),
+            fetch(`${apiBase}/api/fill-blank`)
+        ]);
+        
+        if (wordsRes.ok) {
+            const data = await wordsRes.json();
+            if (data.success) VOCABULARY = data.data;
+        }
+        if (dailyWordsRes.ok) {
+            const data = await dailyWordsRes.json();
+            if (data.success) DAILY_WORDS = data.data;
+        }
+        if (fillBlankRes.ok) {
+            const data = await fillBlankRes.json();
+            if (data.success) FILL_BLANK_DATA = data.data;
+        }
+    } catch (error) {
+        console.error("Không thể kết nối đến Backend. Đang dùng dữ liệu mẫu (offline mode).", error);
+    }
 }
 
 // ===== Initialize Everything =====
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
+    await loadDataFromAPI(); // Tải dữ liệu từ API (MySQL) trước
+    await loadCurriculumData(); // Tải giáo trình Unit & Part từ API
+
     createFloatingDecorations();
     initSparkleEffect();
     initMascotSpeech();
     initDailyWord();
     initEyeFollow();
     initDarkMode();
+    initSettings();
     initScrollReveal();
     initNavScroll();
     loadUserData();

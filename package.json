@@ -1,0 +1,20 @@
+{
+  "name": "funwords-english-game",
+  "version": "1.0.0",
+  "description": "FunWords - Website Học Tiếng Anh Vui Nhộn cho Thiếu Nhi & Giáo Viên",
+  "main": "server/server.js",
+  "scripts": {
+    "start": "node server/server.js",
+    "dev": "node server/server.js",
+    "init-db": "node server/init-db.js",
+    "test": "node test-suite.js"
+  },
+  "keywords": [
+    "english",
+    "kids",
+    "learning-game",
+    "education"
+  ],
+  "author": "",
+  "license": "ISC"
+}

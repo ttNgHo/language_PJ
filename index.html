@@ -26,11 +26,17 @@
                 <a href="#" class="nav-link active" onclick="showPage('home')" data-page="home">
                     <span class="nav-emoji">🏠</span> Trang chủ
                 </a>
+                <a href="#" class="nav-link" onclick="showPage('curriculum')" data-page="curriculum">
+                    <span class="nav-emoji">📖</span> Bài Học Unit
+                </a>
                 <a href="#" class="nav-link" onclick="showPage('games')" data-page="games">
                     <span class="nav-emoji">🎮</span> Trò chơi
                 </a>
                 <a href="#" class="nav-link" onclick="showPage('achievements')" data-page="achievements">
                     <span class="nav-emoji">🏆</span> Thành tích
+                </a>
+                <a href="#" class="nav-link nav-link-admin" onclick="showPage('admin')" data-page="admin">
+                    <span class="nav-emoji">⚙️</span> Quản Lý
                 </a>
                 <a href="#" class="nav-link" onclick="showPage('profile')" data-page="profile">
                     <span class="nav-emoji">👤</span> Hồ sơ
@@ -78,11 +84,14 @@
                         học từ mới và trở thành <span class="highlight-word">Siêu Sao Tiếng Anh</span> nào! ⭐
                     </p>
                     <div class="hero-buttons">
-                        <button class="btn btn-primary btn-lg pulse-glow" onclick="showPage('games')">
-                            <span class="btn-icon">🎮</span> Chơi Ngay!
+                        <button class="btn btn-primary btn-lg pulse-glow" onclick="showPage('curriculum')">
+                            <span class="btn-icon">📖</span> Học Theo Unit!
                         </button>
                         <button class="btn btn-secondary btn-lg" onclick="showPage('games')">
-                            <span class="btn-icon">📚</span> Xem Trò Chơi
+                            <span class="btn-icon">🎮</span> Kho Trò Chơi
+                        </button>
+                        <button class="btn btn-outline-admin btn-lg" onclick="showPage('admin')">
+                            <span class="btn-icon">⚙️</span> Quản Lý Bài Học
                         </button>
                     </div>
                     <div class="hero-stats-row">
@@ -406,6 +415,95 @@
         </footer>
     </main>
 
+    <!-- ===== CURRICULUM PAGE (BÀI HỌC THEO UNIT & PART) ===== -->
+    <main class="page" id="page-curriculum">
+        <section class="page-header curriculum-page-header">
+            <h1 class="page-title">📖 Chương Trình Bài Học Theo Unit</h1>
+            <p class="page-subtitle">Học tiếng Anh bài bản theo từng Unit, kết hợp nhiều mini-game vui nhộn để củng cố kiến thức!</p>
+            <div class="curriculum-top-actions">
+                <button class="btn btn-primary" onclick="showPage('admin')">
+                    <span>⚙️ Mở Bảng Quản Lý Giảng Dạy</span>
+                </button>
+                <button class="btn btn-secondary" onclick="loadCurriculumData(true)">
+                    <span>🔄 Cập Nhật Dữ Liệu</span>
+                </button>
+            </div>
+        </section>
+        <section class="section">
+            <div class="container">
+                <div class="curriculum-units-container" id="curriculumUnitsList">
+                    <!-- Populated dynamically by JS -->
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- ===== ADMIN MANAGEMENT PAGE (QUẢN LÝ BÀI HỌC & TRÒ CHƠI) ===== -->
+    <main class="page" id="page-admin">
+        <section class="page-header admin-page-header">
+            <h1 class="page-title">⚙️ Quản Lý Bài Học & Trò Chơi</h1>
+            <p class="page-subtitle">Trang dành cho Giáo viên / Admin: Tự do tạo Unit, thêm trò chơi theo Part và soạn bộ từ vựng riêng</p>
+        </section>
+        <section class="section admin-section">
+            <div class="container">
+                <!-- Admin Stat Cards -->
+                <div class="admin-stats-row">
+                    <div class="admin-stat-card">
+                        <div class="asc-icon">📘</div>
+                        <div class="asc-info">
+                            <span class="asc-value" id="adminTotalUnits">0</span>
+                            <span class="asc-label">Tổng số Unit</span>
+                        </div>
+                    </div>
+                    <div class="admin-stat-card">
+                        <div class="asc-icon">🎯</div>
+                        <div class="asc-info">
+                            <span class="asc-value" id="adminTotalParts">0</span>
+                            <span class="asc-label">Tổng số Part / Mini-Game</span>
+                        </div>
+                    </div>
+                    <div class="admin-stat-card">
+                        <div class="asc-icon">🔤</div>
+                        <div class="asc-info">
+                            <span class="asc-value" id="adminTotalCustomWords">0</span>
+                            <span class="asc-label">Từ vựng tùy biến</span>
+                        </div>
+                    </div>
+                    <div class="admin-stat-card">
+                        <div class="asc-icon">❓</div>
+                        <div class="asc-info">
+                            <span class="asc-value" id="adminTotalCustomQuestions">0</span>
+                            <span class="asc-label">Câu hỏi tùy biến</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Admin Action Toolbar -->
+                <div class="admin-toolbar">
+                    <div class="toolbar-left">
+                        <button class="btn btn-primary" onclick="openAddUnitModal()">
+                            <span>➕ Thêm Unit Mới</span>
+                        </button>
+                        <button class="btn btn-secondary" onclick="loadCurriculumData(true)">
+                            <span>🔄 Làm Mới Dữ Liệu</span>
+                        </button>
+                        <button class="btn btn-ghost" onclick="showPage('curriculum')">
+                            <span>📖 Xem Giao Diện Học Sinh</span>
+                        </button>
+                    </div>
+                    <div class="toolbar-search">
+                        <input type="text" id="adminSearchInput" placeholder="🔍 Tìm kiếm Unit, bài học..." oninput="filterAdminUnits()">
+                    </div>
+                </div>
+
+                <!-- Admin Units List -->
+                <div class="admin-units-list" id="adminUnitsList">
+                    <!-- Populated by JS -->
+                </div>
+            </div>
+        </section>
+    </main>
+
     <!-- ===== GAMES LIST PAGE ===== -->
     <main class="page" id="page-games">
         <section class="page-header games-page-header">
@@ -429,8 +527,21 @@
 
     <!-- ===== GAME PLAY AREA ===== -->
     <main class="page" id="page-gameplay">
+        <!-- Teaching Mode Banner -->
+        <div class="teaching-banner" id="teachingBanner" style="display: none;">
+            <div class="tb-left">
+                <span class="tb-badge">🎓 ĐANG GIẢNG DẠY</span>
+                <span class="tb-text" id="tbInfo">Unit 1 - Part 1</span>
+            </div>
+            <div class="tb-right">
+                <button class="btn btn-sm btn-outline-white" onclick="exitTeachingMode()">
+                    <span>↩️ Quay Lại Bài Học</span>
+                </button>
+            </div>
+        </div>
+
         <div class="gameplay-header">
-            <button class="btn-back" onclick="showPage('games')">
+            <button class="btn-back" onclick="handleGameplayBack()">
                 <span>← Quay lại</span>
             </button>
             <div class="gameplay-info">
@@ -634,10 +745,244 @@
         </div>
     </div>
 
+    <!-- ===== MODAL THÊM / SỬA UNIT ===== -->
+    <div class="modal-overlay" id="modalUnit">
+        <div class="modal-content admin-modal-card">
+            <div class="modal-header">
+                <h3 class="modal-title" id="modalUnitTitle">➕ Thêm Unit Mới</h3>
+                <button class="modal-close-btn" onclick="closeUnitModal()">✕</button>
+            </div>
+            <form onsubmit="saveUnitForm(event)" class="modal-form">
+                <input type="hidden" id="unitModalId">
+                <div class="form-row-2">
+                    <div class="form-group">
+                        <label class="form-label">Số thứ tự Unit (*)</label>
+                        <input type="number" id="unitNumberInput" class="form-input" min="1" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Icon Emoji</label>
+                        <div class="emoji-input-wrapper">
+                            <input type="text" id="unitIconInput" class="form-input emoji-field" value="📘" maxlength="4">
+                            <div class="emoji-quick-picks">
+                                <span onclick="pickUnitEmoji('🐾')">🐾</span>
+                                <span onclick="pickUnitEmoji('🍎')">🍎</span>
+                                <span onclick="pickUnitEmoji('🏫')">🏫</span>
+                                <span onclick="pickUnitEmoji('🎨')">🎨</span>
+                                <span onclick="pickUnitEmoji('🚗')">🚗</span>
+                                <span onclick="pickUnitEmoji('🌈')">🌈</span>
+                                <span onclick="pickUnitEmoji('🍕')">🍕</span>
+                                <span onclick="pickUnitEmoji('🦊')">🦊</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Tên Unit bài học (*)</label>
+                    <input type="text" id="unitTitleInput" class="form-input" placeholder="Ví dụ: Unit 1: Động Vật Quanh Em" required>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Màu sắc chủ đạo</label>
+                    <div class="color-picker-wrapper">
+                        <input type="color" id="unitColorInput" class="form-color-input" value="#6C63FF">
+                        <div class="color-swatches">
+                            <span style="background: #6C63FF;" onclick="pickUnitColor('#6C63FF')"></span>
+                            <span style="background: #FF6B6B;" onclick="pickUnitColor('#FF6B6B')"></span>
+                            <span style="background: #4ECDC4;" onclick="pickUnitColor('#4ECDC4')"></span>
+                            <span style="background: #F59E0B;" onclick="pickUnitColor('#F59E0B')"></span>
+                            <span style="background: #EC4899;" onclick="pickUnitColor('#EC4899')"></span>
+                            <span style="background: #06B6D4;" onclick="pickUnitColor('#06B6D4')"></span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Mô tả bài học / Lời nhắn cho học sinh</label>
+                    <textarea id="unitDescInput" class="form-textarea" rows="3" placeholder="Nhập mục tiêu hoặc mô tả ngắn gọn về Unit này..."></textarea>
+                </div>
+
+                <div class="modal-actions">
+                    <button type="button" class="btn btn-secondary" onclick="closeUnitModal()">Hủy bỏ</button>
+                    <button type="submit" class="btn btn-primary">💾 Lưu Unit</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- ===== MODAL THÊM / SỬA PART ===== -->
+    <div class="modal-overlay" id="modalPart">
+        <div class="modal-content admin-modal-card">
+            <div class="modal-header">
+                <h3 class="modal-title" id="modalPartTitle">➕ Thêm Part Mới</h3>
+                <button class="modal-close-btn" onclick="closePartModal()">✕</button>
+            </div>
+            <form onsubmit="savePartForm(event)" class="modal-form">
+                <input type="hidden" id="partModalId">
+                <div class="form-group">
+                    <label class="form-label">Thuộc Unit (*)</label>
+                    <select id="partUnitSelect" class="form-select" required></select>
+                </div>
+
+                <div class="form-row-2">
+                    <div class="form-group">
+                        <label class="form-label">Số thứ tự Part (*)</label>
+                        <input type="number" id="partNumberInput" class="form-input" min="1" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Loại Trò Chơi / Hoạt Động (*)</label>
+                        <select id="partGameTypeSelect" class="form-select" required>
+                            <option value="flashcards">🃏 Thẻ Ghi Nhớ (Flashcards)</option>
+                            <option value="wordmatch">🎯 Nối Từ (Word Match)</option>
+                            <option value="spelling">🐝 Đánh Vần (Spelling Bee)</option>
+                            <option value="scramble">🧩 Xếp Chữ (Word Scramble)</option>
+                            <option value="fillblank">📝 Điền Từ (Fill Blank)</option>
+                            <option value="wordcatcher">🎮 Bắt Từ (Word Catcher)</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Tên bài học / hoạt động (*)</label>
+                    <input type="text" id="partTitleInput" class="form-input" placeholder="Ví dụ: Part 1: Thẻ Từ Vựng Thú Cưng" required>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Chủ đề từ vựng mặc định</label>
+                    <select id="partCategorySelect" class="form-select">
+                        <option value="animals">🐾 Động vật (Animals)</option>
+                        <option value="fruits">🍎 Trái cây (Fruits)</option>
+                        <option value="colors">🎨 Màu sắc (Colors)</option>
+                        <option value="family">👨‍👩‍👧‍👦 Gia đình (Family)</option>
+                        <option value="food">🍕 Đồ ăn (Food)</option>
+                        <option value="school">🏫 Trường học (School)</option>
+                        <option value="body">🧍 Cơ thể (Body)</option>
+                        <option value="weather">🌤️ Thời tiết (Weather)</option>
+                        <option value="transport">🚗 Phương tiện (Transport)</option>
+                        <option value="nature">🌿 Thiên nhiên (Nature)</option>
+                    </select>
+                    <small class="form-hint">Dùng khi Part này chưa có danh sách từ vựng riêng biệt.</small>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Hướng dẫn / Lời dặn bài học</label>
+                    <textarea id="partDescInput" class="form-textarea" rows="2" placeholder="Ghi chú hướng dẫn học sinh làm bài..."></textarea>
+                </div>
+
+                <div class="modal-actions">
+                    <button type="button" class="btn btn-secondary" onclick="closePartModal()">Hủy bỏ</button>
+                    <button type="submit" class="btn btn-primary">💾 Lưu Part</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- ===== MODAL SOẠN TỪ VỰNG / CÂU HỎI CHO PART ===== -->
+    <div class="modal-overlay" id="modalPartContent">
+        <div class="modal-content admin-modal-card modal-lg">
+            <div class="modal-header">
+                <div>
+                    <h3 class="modal-title">📝 Soạn Nội Dung Bài Học</h3>
+                    <p class="modal-subtitle" id="mpcPartTitle">Đang soạn nội dung cho bài học</p>
+                </div>
+                <button class="modal-close-btn" onclick="closePartContentModal()">✕</button>
+            </div>
+
+            <!-- Tab Buttons -->
+            <div class="content-tabs-bar">
+                <button class="content-tab-btn active" data-tab="words" onclick="switchContentTab('words')">
+                    🔤 Từ Vựng Riêng (<span id="mpcWordCount">0</span>)
+                </button>
+                <button class="content-tab-btn" data-tab="questions" onclick="switchContentTab('questions')">
+                    ❓ Câu Hỏi Điền Từ (<span id="mpcQuestionCount">0</span>)
+                </button>
+            </div>
+
+            <!-- Tab 1: Từ vựng -->
+            <div id="contentWordsPane" class="content-pane active">
+                <form onsubmit="addWordToPart(event)" class="inline-add-form">
+                    <h4>➕ Thêm từ vựng mới vào Part này:</h4>
+                    <div class="form-grid-3">
+                        <div class="form-group">
+                            <label class="form-label">Từ Tiếng Anh (*)</label>
+                            <input type="text" id="newWordEn" class="form-input" placeholder="Ví dụ: Kitten" required>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Nghĩa Tiếng Việt (*)</label>
+                            <input type="text" id="newWordVi" class="form-input" placeholder="Ví dụ: Mèo con" required>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Emoji minh họa</label>
+                            <input type="text" id="newWordEmoji" class="form-input" placeholder="🐱" value="⭐" maxlength="4">
+                        </div>
+                    </div>
+                    <div class="form-grid-2">
+                        <div class="form-group">
+                            <label class="form-label">Phiên âm (Tùy chọn)</label>
+                            <input type="text" id="newWordPhonetic" class="form-input" placeholder="vd: /ˈkɪt.ən/">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Câu ví dụ (Tùy chọn)</label>
+                            <input type="text" id="newWordExample" class="form-input" placeholder="vd: The kitten is playful.">
+                        </div>
+                    </div>
+                    <div class="form-submit-row">
+                        <button type="submit" class="btn btn-primary btn-sm">
+                            <span>➕ Thêm Vào Danh Sách</span>
+                        </button>
+                    </div>
+                </form>
+
+                <div class="content-table-wrapper" id="mpcWordsList">
+                    <!-- Words table populated by JS -->
+                </div>
+            </div>
+
+            <!-- Tab 2: Câu hỏi điền từ -->
+            <div id="contentQuestionsPane" class="content-pane" style="display: none;">
+                <form onsubmit="addQuestionToPart(event)" class="inline-add-form">
+                    <h4>➕ Thêm câu hỏi điền từ mới vào Part này:</h4>
+                    <div class="form-group">
+                        <label class="form-label">Câu hỏi (Dùng dấu <code>___</code> tại vị trí cần điền) (*)</label>
+                        <input type="text" id="newQSentence" class="form-input" placeholder="Ví dụ: The ___ is sleeping on the sofa." required>
+                    </div>
+                    <div class="form-grid-2">
+                        <div class="form-group">
+                            <label class="form-label">Đáp án đúng (*)</label>
+                            <input type="text" id="newQAnswer" class="form-input" placeholder="Ví dụ: cat" required>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Các lựa chọn (Cách nhau bởi dấu phẩy) (*)</label>
+                            <input type="text" id="newQOptions" class="form-input" placeholder="Ví dụ: cat,dog,bird,fish" required>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Gợi ý cho học sinh (Tùy chọn)</label>
+                        <input type="text" id="newQHint" class="form-input" placeholder="Ví dụ: 🐱 Con vật thích uống sữa và kêu meo meo">
+                    </div>
+                    <div class="form-submit-row">
+                        <button type="submit" class="btn btn-primary btn-sm">
+                            <span>➕ Thêm Câu Hỏi</span>
+                        </button>
+                    </div>
+                </form>
+
+                <div class="content-table-wrapper" id="mpcQuestionsList">
+                    <!-- Questions table populated by JS -->
+                </div>
+            </div>
+
+            <div class="modal-footer-close">
+                <button type="button" class="btn btn-secondary" onclick="closePartContentModal()">Đóng cửa sổ</button>
+            </div>
+        </div>
+    </div>
+
     <!-- Confetti container -->
     <canvas id="confettiCanvas"></canvas>
 
     <script src="data.js"></script>
+    <script src="curriculum.js"></script>
     <script src="games.js"></script>
     <script src="app.js"></script>
 </body>

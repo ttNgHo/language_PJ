@@ -3,7 +3,7 @@
    All game data, words, categories
    ========================================== */
 
-const VOCABULARY = {
+let VOCABULARY = {
     animals: [
         { en: 'Cat', vi: 'Con mèo', emoji: '🐱', phonetic: '/kæt/', example: 'The cat is sleeping.' },
         { en: 'Dog', vi: 'Con chó', emoji: '🐶', phonetic: '/dɒɡ/', example: 'The dog is running.' },
@@ -121,7 +121,7 @@ const VOCABULARY = {
     ]
 };
 
-const DAILY_WORDS = [
+let DAILY_WORDS = [
     { en: 'Butterfly', vi: 'Con bướm', emoji: '🦋', phonetic: '/ˈbʌtərflaɪ/', example: 'The butterfly is very beautiful.', meaning: 'Con bướm' },
     { en: 'Rainbow', vi: 'Cầu vồng', emoji: '🌈', phonetic: '/ˈreɪn.boʊ/', example: 'The rainbow has seven colors.', meaning: 'Cầu vồng' },
     { en: 'Elephant', vi: 'Con voi', emoji: '🐘', phonetic: '/ˈel.ɪ.fənt/', example: 'The elephant is the biggest animal.', meaning: 'Con voi' },
@@ -131,7 +131,7 @@ const DAILY_WORDS = [
     { en: 'Watermelon', vi: 'Dưa hấu', emoji: '🍉', phonetic: '/ˈwɔːtərmelən/', example: 'Watermelon is my favorite fruit.', meaning: 'Dưa hấu' },
 ];
 
-const FILL_BLANK_DATA = [
+let FILL_BLANK_DATA = [
     { sentence: 'The ___ is red.', answer: 'apple', options: ['apple', 'banana', 'orange', 'grape'], hint: '🍎 Một loại quả màu đỏ' },
     { sentence: 'I drink ___ every morning.', answer: 'milk', options: ['milk', 'soup', 'rice', 'cake'], hint: '🥛 Thức uống màu trắng' },
     { sentence: 'The ___ is shining.', answer: 'sun', options: ['sun', 'moon', 'rain', 'cloud'], hint: '☀️ Trên bầu trời ban ngày' },
