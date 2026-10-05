@@ -1,0 +1,644 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="FunWords - Website game học tiếng Anh vui nhộn dành cho thiếu nhi với nhiều trò chơi từ vựng hấp dẫn">
+    <title>🌈 FunWords - Học Tiếng Anh Vui Nhộn!</title>
+    <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@400;500;600;700;800&family=Fredoka:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <!-- Floating decorations -->
+    <div class="floating-decorations" id="floatingDecorations"></div>
+    
+    <!-- Sparkle cursor effect -->
+    <div id="sparkleContainer"></div>
+
+    <!-- Navigation -->
+    <nav class="main-nav" id="mainNav">
+        <div class="nav-content">
+            <a href="#" class="nav-logo" onclick="showPage('home')">
+                <span class="logo-icon">🌈</span>
+                <span class="logo-text">Fun<span class="logo-highlight">Words</span></span>
+            </a>
+            <div class="nav-links">
+                <a href="#" class="nav-link active" onclick="showPage('home')" data-page="home">
+                    <span class="nav-emoji">🏠</span> Trang chủ
+                </a>
+                <a href="#" class="nav-link" onclick="showPage('games')" data-page="games">
+                    <span class="nav-emoji">🎮</span> Trò chơi
+                </a>
+                <a href="#" class="nav-link" onclick="showPage('achievements')" data-page="achievements">
+                    <span class="nav-emoji">🏆</span> Thành tích
+                </a>
+                <a href="#" class="nav-link" onclick="showPage('profile')" data-page="profile">
+                    <span class="nav-emoji">👤</span> Hồ sơ
+                </a>
+            </div>
+            <div class="nav-stats">
+                <div class="stat-badge stars-badge">
+                    <span class="stat-icon">⭐</span>
+                    <span class="stat-value" id="totalStars">0</span>
+                </div>
+                <div class="stat-badge streak-badge">
+                    <span class="stat-icon">🔥</span>
+                    <span class="stat-value" id="streakCount">3</span>
+                </div>
+            </div>
+            <button class="mobile-menu-btn" onclick="toggleMobileMenu()">
+                <span></span><span></span><span></span>
+            </button>
+        </div>
+    </nav>
+
+    <!-- ===== HOME PAGE ===== -->
+    <main class="page active" id="page-home">
+        <!-- Hero Section -->
+        <section class="hero">
+            <div class="hero-bg-shapes">
+                <div class="shape shape-1"></div>
+                <div class="shape shape-2"></div>
+                <div class="shape shape-3"></div>
+                <div class="shape shape-4"></div>
+                <div class="shape shape-5"></div>
+            </div>
+            <div class="hero-content">
+                <div class="hero-text">
+                    <div class="hero-badge animate-bounce-in">
+                        <span>🎉</span> Học mà chơi, chơi mà học!
+                    </div>
+                    <h1 class="hero-title">
+                        <span class="title-line">Khám phá</span>
+                        <span class="title-line gradient-text">Tiếng Anh</span>
+                        <span class="title-line">Cùng FunWords! 🚀</span>
+                    </h1>
+                    <p class="hero-desc">
+                        Hơn <strong>500+ từ vựng</strong> thú vị đang chờ bạn! Cùng chơi game, 
+                        học từ mới và trở thành <span class="highlight-word">Siêu Sao Tiếng Anh</span> nào! ⭐
+                    </p>
+                    <div class="hero-buttons">
+                        <button class="btn btn-primary btn-lg pulse-glow" onclick="showPage('games')">
+                            <span class="btn-icon">🎮</span> Chơi Ngay!
+                        </button>
+                        <button class="btn btn-secondary btn-lg" onclick="showPage('games')">
+                            <span class="btn-icon">📚</span> Xem Trò Chơi
+                        </button>
+                    </div>
+                    <div class="hero-stats-row">
+                        <div class="hero-stat">
+                            <span class="hero-stat-number" data-count="500">0</span>+
+                            <span class="hero-stat-label">Từ vựng</span>
+                        </div>
+                        <div class="hero-stat">
+                            <span class="hero-stat-number" data-count="6">0</span>
+                            <span class="hero-stat-label">Trò chơi</span>
+                        </div>
+                        <div class="hero-stat">
+                            <span class="hero-stat-number" data-count="1000">0</span>+
+                            <span class="hero-stat-label">Bạn nhỏ</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="hero-mascot">
+                    <div class="mascot-container animate-float">
+                        <div class="mascot-character">
+                            <div class="mascot-body">
+                                <div class="mascot-face">
+                                    <div class="mascot-eyes">
+                                        <div class="mascot-eye left">
+                                            <div class="eye-pupil"></div>
+                                        </div>
+                                        <div class="mascot-eye right">
+                                            <div class="eye-pupil"></div>
+                                        </div>
+                                    </div>
+                                    <div class="mascot-mouth"></div>
+                                    <div class="mascot-blush left"></div>
+                                    <div class="mascot-blush right"></div>
+                                </div>
+                                <div class="mascot-hat">📚</div>
+                            </div>
+                            <div class="mascot-speech-bubble">
+                                <span id="mascotSpeech">Hello! Let's learn! 🎉</span>
+                            </div>
+                        </div>
+                        <div class="floating-letters">
+                            <span class="float-letter" style="--delay: 0s; --x: -80px; --y: -60px;">A</span>
+                            <span class="float-letter" style="--delay: 0.5s; --x: 80px; --y: -40px;">B</span>
+                            <span class="float-letter" style="--delay: 1s; --x: -60px; --y: 40px;">C</span>
+                            <span class="float-letter" style="--delay: 1.5s; --x: 70px; --y: 60px;">Z</span>
+                            <span class="float-letter" style="--delay: 2s; --x: 0px; --y: -80px;">E</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="hero-wave">
+                <svg viewBox="0 0 1440 120" preserveAspectRatio="none">
+                    <path d="M0,60 C360,120 720,0 1080,60 C1260,90 1380,80 1440,60 L1440,120 L0,120 Z" fill="var(--bg-main)"/>
+                </svg>
+            </div>
+        </section>
+
+        <!-- Daily Word Section -->
+        <section class="section daily-word-section">
+            <div class="container">
+                <div class="daily-word-card">
+                    <div class="daily-word-header">
+                        <span class="daily-badge">📅 Từ vựng hôm nay</span>
+                        <span class="daily-date" id="todayDate"></span>
+                    </div>
+                    <div class="daily-word-content">
+                        <div class="daily-word-main">
+                            <h2 class="daily-word" id="dailyWord">Butterfly</h2>
+                            <span class="daily-phonetic" id="dailyPhonetic">/ˈbʌtərflaɪ/</span>
+                            <button class="btn-speak" onclick="speakWord('butterfly')">
+                                🔊
+                            </button>
+                        </div>
+                        <div class="daily-word-info">
+                            <p class="daily-meaning"><strong>Nghĩa:</strong> <span id="dailyMeaning">Con bướm</span></p>
+                            <p class="daily-example"><strong>Ví dụ:</strong> <em id="dailyExample">The butterfly is very beautiful.</em></p>
+                        </div>
+                        <div class="daily-word-emoji" id="dailyEmoji">🦋</div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Featured Games Section -->
+        <section class="section games-preview-section">
+            <div class="container">
+                <div class="section-header">
+                    <h2 class="section-title">
+                        <span class="title-emoji">🎮</span>
+                        Trò Chơi Nổi Bật
+                    </h2>
+                    <p class="section-subtitle">Chọn trò chơi yêu thích và bắt đầu học ngay nào!</p>
+                </div>
+                <div class="games-grid">
+                    <!-- Game Card 1: Word Match -->
+                    <div class="game-card" onclick="startGame('wordmatch')" style="--card-color: #FF6B6B; --card-gradient: linear-gradient(135deg, #FF6B6B, #FF8E53);">
+                        <div class="game-card-bg"></div>
+                        <div class="game-card-content">
+                            <div class="game-card-icon">🎯</div>
+                            <h3 class="game-card-title">Nối Từ</h3>
+                            <p class="game-card-desc">Nối từ tiếng Anh với nghĩa tiếng Việt tương ứng</p>
+                            <div class="game-card-meta">
+                                <span class="game-difficulty easy">Dễ</span>
+                                <span class="game-players">👥 2.5k đã chơi</span>
+                            </div>
+                        </div>
+                        <div class="game-card-stars">⭐⭐⭐</div>
+                    </div>
+
+                    <!-- Game Card 2: Spelling Bee -->
+                    <div class="game-card" onclick="startGame('spelling')" style="--card-color: #4ECDC4; --card-gradient: linear-gradient(135deg, #4ECDC4, #44B09E);">
+                        <div class="game-card-bg"></div>
+                        <div class="game-card-content">
+                            <div class="game-card-icon">🐝</div>
+                            <h3 class="game-card-title">Đánh Vần</h3>
+                            <p class="game-card-desc">Nghe và đánh vần từ tiếng Anh cho đúng nhé!</p>
+                            <div class="game-card-meta">
+                                <span class="game-difficulty medium">Trung bình</span>
+                                <span class="game-players">👥 1.8k đã chơi</span>
+                            </div>
+                        </div>
+                        <div class="game-card-stars">⭐⭐⭐</div>
+                    </div>
+
+                    <!-- Game Card 3: Word Scramble -->
+                    <div class="game-card" onclick="startGame('scramble')" style="--card-color: #A78BFA; --card-gradient: linear-gradient(135deg, #A78BFA, #818CF8);">
+                        <div class="game-card-bg"></div>
+                        <div class="game-card-content">
+                            <div class="game-card-icon">🧩</div>
+                            <h3 class="game-card-title">Xếp Chữ</h3>
+                            <p class="game-card-desc">Sắp xếp các chữ cái lộn xộn thành từ có nghĩa</p>
+                            <div class="game-card-meta">
+                                <span class="game-difficulty medium">Trung bình</span>
+                                <span class="game-players">👥 2.1k đã chơi</span>
+                            </div>
+                        </div>
+                        <div class="game-card-stars">⭐⭐⭐</div>
+                    </div>
+
+                    <!-- Game Card 4: Flashcards -->
+                    <div class="game-card" onclick="startGame('flashcards')" style="--card-color: #F59E0B; --card-gradient: linear-gradient(135deg, #F59E0B, #EF4444);">
+                        <div class="game-card-bg"></div>
+                        <div class="game-card-content">
+                            <div class="game-card-icon">🃏</div>
+                            <h3 class="game-card-title">Thẻ Ghi Nhớ</h3>
+                            <p class="game-card-desc">Lật thẻ để học và ghi nhớ từ vựng mới</p>
+                            <div class="game-card-meta">
+                                <span class="game-difficulty easy">Dễ</span>
+                                <span class="game-players">👥 3.2k đã chơi</span>
+                            </div>
+                        </div>
+                        <div class="game-card-stars">⭐⭐⭐</div>
+                    </div>
+
+                    <!-- Game Card 5: Fill the Blank -->
+                    <div class="game-card" onclick="startGame('fillblank')" style="--card-color: #EC4899; --card-gradient: linear-gradient(135deg, #EC4899, #F472B6);">
+                        <div class="game-card-bg"></div>
+                        <div class="game-card-content">
+                            <div class="game-card-icon">📝</div>
+                            <h3 class="game-card-title">Điền Từ</h3>
+                            <p class="game-card-desc">Điền từ còn thiếu vào câu cho hoàn chỉnh</p>
+                            <div class="game-card-meta">
+                                <span class="game-difficulty hard">Khó</span>
+                                <span class="game-players">👥 1.5k đã chơi</span>
+                            </div>
+                        </div>
+                        <div class="game-card-stars">⭐⭐⭐</div>
+                    </div>
+
+                    <!-- Game Card 6: Word Catcher -->
+                    <div class="game-card" onclick="startGame('wordcatcher')" style="--card-color: #06B6D4; --card-gradient: linear-gradient(135deg, #06B6D4, #3B82F6);">
+                        <div class="game-card-bg"></div>
+                        <div class="game-card-content">
+                            <div class="game-card-icon">🎮</div>
+                            <h3 class="game-card-title">Bắt Từ</h3>
+                            <p class="game-card-desc">Bắt từ đúng rơi xuống trước khi quá muộn!</p>
+                            <div class="game-card-meta">
+                                <span class="game-difficulty hard">Khó</span>
+                                <span class="game-players">👥 1.9k đã chơi</span>
+                            </div>
+                        </div>
+                        <div class="game-card-stars">⭐⭐⭐</div>
+                    </div>
+                </div>
+                <div class="section-cta">
+                    <button class="btn btn-primary btn-lg" onclick="showPage('games')">
+                        <span class="btn-icon">🎯</span> Xem Tất Cả Trò Chơi
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- Categories Section -->
+        <section class="section categories-section">
+            <div class="container">
+                <div class="section-header">
+                    <h2 class="section-title">
+                        <span class="title-emoji">📚</span>
+                        Chủ Đề Từ Vựng
+                    </h2>
+                    <p class="section-subtitle">Chọn chủ đề yêu thích để bắt đầu học!</p>
+                </div>
+                <div class="categories-scroll">
+                    <div class="category-chip" onclick="selectCategory('animals')">
+                        <span class="category-emoji">🐾</span>
+                        <span>Động vật</span>
+                        <span class="category-count">45 từ</span>
+                    </div>
+                    <div class="category-chip" onclick="selectCategory('fruits')">
+                        <span class="category-emoji">🍎</span>
+                        <span>Trái cây</span>
+                        <span class="category-count">30 từ</span>
+                    </div>
+                    <div class="category-chip" onclick="selectCategory('colors')">
+                        <span class="category-emoji">🎨</span>
+                        <span>Màu sắc</span>
+                        <span class="category-count">15 từ</span>
+                    </div>
+                    <div class="category-chip" onclick="selectCategory('family')">
+                        <span class="category-emoji">👨‍👩‍👧‍👦</span>
+                        <span>Gia đình</span>
+                        <span class="category-count">20 từ</span>
+                    </div>
+                    <div class="category-chip" onclick="selectCategory('food')">
+                        <span class="category-emoji">🍕</span>
+                        <span>Đồ ăn</span>
+                        <span class="category-count">50 từ</span>
+                    </div>
+                    <div class="category-chip" onclick="selectCategory('school')">
+                        <span class="category-emoji">🏫</span>
+                        <span>Trường học</span>
+                        <span class="category-count">35 từ</span>
+                    </div>
+                    <div class="category-chip" onclick="selectCategory('body')">
+                        <span class="category-emoji">🧍</span>
+                        <span>Cơ thể</span>
+                        <span class="category-count">25 từ</span>
+                    </div>
+                    <div class="category-chip" onclick="selectCategory('weather')">
+                        <span class="category-emoji">🌤️</span>
+                        <span>Thời tiết</span>
+                        <span class="category-count">18 từ</span>
+                    </div>
+                    <div class="category-chip" onclick="selectCategory('transport')">
+                        <span class="category-emoji">🚗</span>
+                        <span>Phương tiện</span>
+                        <span class="category-count">22 từ</span>
+                    </div>
+                    <div class="category-chip" onclick="selectCategory('nature')">
+                        <span class="category-emoji">🌿</span>
+                        <span>Thiên nhiên</span>
+                        <span class="category-count">28 từ</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Leaderboard Preview -->
+        <section class="section leaderboard-section">
+            <div class="container">
+                <div class="section-header">
+                    <h2 class="section-title">
+                        <span class="title-emoji">🏆</span>
+                        Bảng Xếp Hạng
+                    </h2>
+                    <p class="section-subtitle">Top các bạn nhỏ giỏi nhất tuần này!</p>
+                </div>
+                <div class="leaderboard-cards">
+                    <div class="leader-card rank-2">
+                        <div class="leader-rank">🥈</div>
+                        <div class="leader-avatar">👧</div>
+                        <div class="leader-name">Minh Anh</div>
+                        <div class="leader-score">⭐ 2,450</div>
+                    </div>
+                    <div class="leader-card rank-1">
+                        <div class="leader-crown">👑</div>
+                        <div class="leader-rank">🥇</div>
+                        <div class="leader-avatar">👦</div>
+                        <div class="leader-name">Đức Huy</div>
+                        <div class="leader-score">⭐ 3,200</div>
+                    </div>
+                    <div class="leader-card rank-3">
+                        <div class="leader-rank">🥉</div>
+                        <div class="leader-avatar">👧</div>
+                        <div class="leader-name">Thảo Vy</div>
+                        <div class="leader-score">⭐ 1,890</div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Footer -->
+        <footer class="main-footer">
+            <div class="footer-wave">
+                <svg viewBox="0 0 1440 120" preserveAspectRatio="none">
+                    <path d="M0,60 C360,0 720,120 1080,60 C1260,30 1380,40 1440,60 L1440,0 L0,0 Z" fill="var(--bg-main)"/>
+                </svg>
+            </div>
+            <div class="container">
+                <div class="footer-content">
+                    <div class="footer-brand">
+                        <span class="footer-logo">🌈 FunWords</span>
+                        <p>Học tiếng Anh thật vui cùng FunWords! 🎉</p>
+                    </div>
+                    <div class="footer-links">
+                        <a href="#">Về chúng tôi</a>
+                        <a href="#">Liên hệ</a>
+                        <a href="#">Chính sách</a>
+                    </div>
+                    <div class="footer-social">
+                        <span>Theo dõi: </span>
+                        <a href="#">📘</a>
+                        <a href="#">📸</a>
+                        <a href="#">🐦</a>
+                    </div>
+                </div>
+                <div class="footer-bottom">
+                    <p>© 2026 FunWords. Made with ❤️ for kids!</p>
+                </div>
+            </div>
+        </footer>
+    </main>
+
+    <!-- ===== GAMES LIST PAGE ===== -->
+    <main class="page" id="page-games">
+        <section class="page-header games-page-header">
+            <h1 class="page-title">🎮 Kho Trò Chơi</h1>
+            <p class="page-subtitle">Chọn trò chơi yêu thích và chinh phục thử thách nào!</p>
+            <div class="game-filters">
+                <button class="filter-btn active" onclick="filterGames('all')">Tất cả</button>
+                <button class="filter-btn" onclick="filterGames('easy')">🟢 Dễ</button>
+                <button class="filter-btn" onclick="filterGames('medium')">🟡 Trung bình</button>
+                <button class="filter-btn" onclick="filterGames('hard')">🔴 Khó</button>
+            </div>
+        </section>
+        <section class="section">
+            <div class="container">
+                <div class="games-grid large-grid" id="gamesListGrid">
+                    <!-- Games will be populated by JS -->
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- ===== GAME PLAY AREA ===== -->
+    <main class="page" id="page-gameplay">
+        <div class="gameplay-header">
+            <button class="btn-back" onclick="showPage('games')">
+                <span>← Quay lại</span>
+            </button>
+            <div class="gameplay-info">
+                <h2 class="gameplay-title" id="gameplayTitle">Trò Chơi</h2>
+                <div class="gameplay-stats">
+                    <div class="gp-stat">
+                        <span class="gp-stat-icon">⭐</span>
+                        <span class="gp-stat-value" id="gpScore">0</span>
+                    </div>
+                    <div class="gp-stat">
+                        <span class="gp-stat-icon">❤️</span>
+                        <span class="gp-stat-value" id="gpLives">3</span>
+                    </div>
+                    <div class="gp-stat">
+                        <span class="gp-stat-icon">⏱️</span>
+                        <span class="gp-stat-value" id="gpTimer">60</span>
+                    </div>
+                </div>
+            </div>
+            <div class="gameplay-progress">
+                <div class="progress-bar">
+                    <div class="progress-fill" id="gpProgress" style="width: 0%"></div>
+                </div>
+                <span class="progress-text" id="gpProgressText">0/10</span>
+            </div>
+        </div>
+        <div class="gameplay-container" id="gameplayContainer">
+            <!-- Game content will be loaded dynamically -->
+        </div>
+    </main>
+
+    <!-- ===== ACHIEVEMENTS PAGE ===== -->
+    <main class="page" id="page-achievements">
+        <section class="page-header achievements-header">
+            <h1 class="page-title">🏆 Thành Tích</h1>
+            <p class="page-subtitle">Huy chương và thành tích của bạn!</p>
+        </section>
+        <section class="section">
+            <div class="container">
+                <div class="achievements-summary">
+                    <div class="achievement-stat-card">
+                        <div class="ach-icon">⭐</div>
+                        <div class="ach-value" id="achStars">0</div>
+                        <div class="ach-label">Tổng sao</div>
+                    </div>
+                    <div class="achievement-stat-card">
+                        <div class="ach-icon">🎮</div>
+                        <div class="ach-value" id="achGames">0</div>
+                        <div class="ach-label">Ván chơi</div>
+                    </div>
+                    <div class="achievement-stat-card">
+                        <div class="ach-icon">📚</div>
+                        <div class="ach-value" id="achWords">0</div>
+                        <div class="ach-label">Từ đã học</div>
+                    </div>
+                    <div class="achievement-stat-card">
+                        <div class="ach-icon">🔥</div>
+                        <div class="ach-value" id="achStreak">3</div>
+                        <div class="ach-label">Chuỗi ngày</div>
+                    </div>
+                </div>
+
+                <h3 class="subsection-title">🎖️ Huy Chương</h3>
+                <div class="badges-grid" id="badgesGrid">
+                    <!-- Badges populated by JS -->
+                </div>
+
+                <h3 class="subsection-title">📊 Lịch Sử Học Tập</h3>
+                <div class="learning-calendar" id="learningCalendar">
+                    <!-- Calendar populated by JS -->
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- ===== PROFILE PAGE ===== -->
+    <main class="page" id="page-profile">
+        <section class="page-header profile-header">
+            <h1 class="page-title">👤 Hồ Sơ Của Bạn</h1>
+            <p class="page-subtitle">Trang cá nhân và cài đặt</p>
+        </section>
+        <section class="section">
+            <div class="container">
+                <div class="profile-card">
+                    <div class="profile-avatar-section">
+                        <div class="profile-avatar" id="profileAvatar">
+                            <span class="avatar-emoji">🦊</span>
+                        </div>
+                        <div class="avatar-selector" id="avatarSelector">
+                            <span class="avatar-option" onclick="selectAvatar('🦊')">🦊</span>
+                            <span class="avatar-option" onclick="selectAvatar('🐱')">🐱</span>
+                            <span class="avatar-option" onclick="selectAvatar('🐶')">🐶</span>
+                            <span class="avatar-option" onclick="selectAvatar('🐼')">🐼</span>
+                            <span class="avatar-option" onclick="selectAvatar('🦁')">🦁</span>
+                            <span class="avatar-option" onclick="selectAvatar('🐰')">🐰</span>
+                            <span class="avatar-option" onclick="selectAvatar('🐸')">🐸</span>
+                            <span class="avatar-option" onclick="selectAvatar('🦄')">🦄</span>
+                        </div>
+                    </div>
+                    <div class="profile-info">
+                        <div class="profile-field">
+                            <label>Tên của bạn</label>
+                            <input type="text" id="profileName" placeholder="Nhập tên của bạn..." value="Bé Yêu">
+                        </div>
+                        <div class="profile-field">
+                            <label>Tuổi</label>
+                            <select id="profileAge">
+                                <option value="5">5 tuổi</option>
+                                <option value="6">6 tuổi</option>
+                                <option value="7" selected>7 tuổi</option>
+                                <option value="8">8 tuổi</option>
+                                <option value="9">9 tuổi</option>
+                                <option value="10">10 tuổi</option>
+                                <option value="11">11 tuổi</option>
+                                <option value="12">12 tuổi</option>
+                            </select>
+                        </div>
+                        <div class="profile-field">
+                            <label>Cấp độ</label>
+                            <div class="level-bar">
+                                <div class="level-badge">Lv. 5</div>
+                                <div class="level-progress">
+                                    <div class="level-fill" style="width: 60%"></div>
+                                </div>
+                                <span class="level-xp">600/1000 XP</span>
+                            </div>
+                        </div>
+                        <button class="btn btn-primary" onclick="saveProfile()">
+                            💾 Lưu thay đổi
+                        </button>
+                    </div>
+                </div>
+
+                <div class="settings-card">
+                    <h3 class="settings-title">⚙️ Cài Đặt</h3>
+                    <div class="setting-item">
+                        <span class="setting-label">🔊 Âm thanh</span>
+                        <label class="toggle-switch">
+                            <input type="checkbox" id="soundToggle" checked>
+                            <span class="toggle-slider"></span>
+                        </label>
+                    </div>
+                    <div class="setting-item">
+                        <span class="setting-label">🎵 Nhạc nền</span>
+                        <label class="toggle-switch">
+                            <input type="checkbox" id="musicToggle" checked>
+                            <span class="toggle-slider"></span>
+                        </label>
+                    </div>
+                    <div class="setting-item">
+                        <span class="setting-label">🌙 Chế độ tối</span>
+                        <label class="toggle-switch">
+                            <input type="checkbox" id="darkModeToggle">
+                            <span class="toggle-slider"></span>
+                        </label>
+                    </div>
+                    <div class="setting-item">
+                        <span class="setting-label">✨ Hiệu ứng</span>
+                        <label class="toggle-switch">
+                            <input type="checkbox" id="effectsToggle" checked>
+                            <span class="toggle-slider"></span>
+                        </label>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- ===== GAME RESULT MODAL ===== -->
+    <div class="modal-overlay" id="resultModal">
+        <div class="modal-content result-modal">
+            <div class="result-emoji" id="resultEmoji">🎉</div>
+            <h2 class="result-title" id="resultTitle">Tuyệt Vời!</h2>
+            <p class="result-message" id="resultMessage">Bạn đã hoàn thành xuất sắc!</p>
+            <div class="result-stats">
+                <div class="result-stat">
+                    <span class="rs-icon">⭐</span>
+                    <span class="rs-value" id="resultScore">0</span>
+                    <span class="rs-label">Điểm</span>
+                </div>
+                <div class="result-stat">
+                    <span class="rs-icon">✅</span>
+                    <span class="rs-value" id="resultCorrect">0</span>
+                    <span class="rs-label">Đúng</span>
+                </div>
+                <div class="result-stat">
+                    <span class="rs-icon">⏱️</span>
+                    <span class="rs-value" id="resultTime">0s</span>
+                    <span class="rs-label">Thời gian</span>
+                </div>
+            </div>
+            <div class="result-stars" id="resultStars">
+                <span class="result-star">⭐</span>
+                <span class="result-star">⭐</span>
+                <span class="result-star">⭐</span>
+            </div>
+            <div class="result-buttons">
+                <button class="btn btn-primary" onclick="replayGame()">🔄 Chơi lại</button>
+                <button class="btn btn-secondary" onclick="showPage('games')">📋 Trò chơi khác</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Confetti container -->
+    <canvas id="confettiCanvas"></canvas>
+
+    <script src="data.js"></script>
+    <script src="games.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>
